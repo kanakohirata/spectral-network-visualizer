@@ -1,0 +1,40 @@
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>{% block title %}{% endblock %}</title>
+
+    <!-- My style -->
+    <link rel="icon" href="{% static 'image/favicon.ico' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/prior_class.css' %}">
+    <link href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+    {% block head %}{% endblock %}
+</head>
+
+<body id="body">
+    {% block page_header %}{% endblock %}
+    <div id="main-wrapper">
+        <div id="main-content-container" class="content-container {% block color-theme %}{% endblock %}">
+            <div class="message-container">
+                <ul class="messages empty">
+                    {% for message in messages %}
+                        <li class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                            {{ message }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% block contents%}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>

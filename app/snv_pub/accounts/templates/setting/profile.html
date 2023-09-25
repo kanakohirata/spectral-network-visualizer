@@ -1,0 +1,164 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block head_title %}Profile{% endblock %}
+
+{% block result_msg %}
+{% if msg %}
+<div class="masthead-container" xmlns="http://www.w3.org/1999/html">
+    <div class="masthead-elem result-msg-container">
+        <p class="result-msg">{{ msg }}</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block color-theme %}blue-theme{% endblock %}
+{% block account_content%}
+<div id="user-profile">
+    <h1>User Info</h1>
+    <section id="basic-information-section" class="section-2nd">
+        <table class="table-vertical-headers">
+            <tbody>
+                <tr><th>Name</th><td>{{ user.username }}</td></tr>
+                <tr><th>Email Address</th><td>{{ user.email }}</td></tr>
+            </tbody>
+        </table>
+        <p style="text-align: right;">
+            <a href="{% url 'account_change_password' %}">Change password </a>
+            <span style="padding:0 5px; color:var(--gray);">|</span>
+            <a href="{% url 'account_reset_password' %}"> I forgot my password</a>
+        </p>
+    </section>
+    <section id="email-section" class="section-2nd">
+        <h2>Email</h2>
+        <div class="section-content">
+            <section class="section-3rd">
+                <h3>Primary email address</h3>
+                <p>{{ primary_email.email }}</p>
+            </section>
+            <section class="section-3rd">
+                <h3>Secondary email addresses</h3>
+                {% if other_emails %}
+                <ul id="email-list">
+                    {% for email in other_emails %}
+                    <li>
+                        <div class="flex-row">
+                            <p>{{ email.email }}</p>
+                            <form method="post" action="{% url 'accounts:email_remove'%}" class="account-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="email" value="{{ email.email }}">
+                                <button class="btn-submit text-like-button help-text confirm-before-submit" type="submit"
+                                        data-help="Remove this email"
+                                        data-confirm="Are you sure you want to remove this email completely from your account?">
+                                    <span class="material-symbols-outlined background-color-white color-main-red">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                        <ul class="email-attribute-list">
+                            <li>
+                                <div class="flex-row">
+                                    {% if email.verified %}
+                                    <span class="color-light-green">Verified</span>
+                                    {% else %}
+                                    <span class="color-main-red">Unverified</span>
+                                    <form method="post" action="{% url 'accounts:email_verify'%}" class="account-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="email" value="{{ email.email }}">
+                                        <button class="a-tag-style text-like-button" type="submit">&#x2192; Send verification email</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p>No email address</p>
+                {% endif %}
+            </section>
+            <section class="section-3rd">
+                <h3>Change Primary Email Address</h3>
+                <form id="change-primary-email-form" method="post" action="{% url 'accounts:email_change_primary'%}"  class="account-form">
+                    {% csrf_token %}
+                    <div class="flex-row input-button-container">
+                        <select name="email">
+                            <option value="{{ primary_email.email }}">{{ primary_email.email }}</option>
+                            {% for email in other_emails %}
+                            {% if email.verified %}
+                            <option value="{{ email.email }}">{{ email.email }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                        <div class="submit-container">
+                            <button type="submit">Save</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+            <section class="section-3rd">
+                <h3>Add Email Address</h3>
+                <form id="add-email-form" method="post" action="{% url 'accounts:email_add'%}" class="account-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action_add" value="action_add">
+                    <div class="flex-row input-button-container">
+                        <div class="flex-column input-message-container">
+                            {{ email_add_form.email }}
+                            {{ email_add_form.email.errors }}
+                        </div>
+                        <div class="submit-container">
+                            <button class="btn-submit" type="submit">Add</button>
+                        </div>
+                    </div>
+
+                    {% if email_add_form.non_field_errors %}
+                    <div class="message-container">
+                        <ul>
+                            {% for error in email_add_form.non_field_errors %}
+                                <li class="message error">
+                                    <p>{{ error }}</p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </form>
+            </section>
+        </div>
+    </section>
+    <section id="delete-account-section" class="section-2nd">
+        <h2>Delete account</h2>
+        <p>All your information will be deleted from this site.</p>
+        <details {% if delete_account_form_opened %}open{% endif %}>
+            <summary>Delete my account</summary>
+            <p>Please type "delete" to delete your account.</p>
+            <form id="delete-account-form" method="post" action="{% url 'accounts:delete_account' %}">
+                {% csrf_token %}
+                <div class="flex-row input-button-container">
+                    <div class="flex-column input-message-container">
+                        {{ delete_account_form.confirmation }}
+                        {{ delete_account_form.confirmation.errors }}
+                    </div>
+                    <div class="submit-container">
+                        <button class="btn-submit" type="submit">Confirm</button>
+                    </div>
+                </div>
+
+                {% if delete_account_form.non_field_errors %}
+                <div class="message-container">
+                    <ul class="messages">
+                        {% for error in delete_account_form.non_field_errors %}
+                            <li class="message error">
+                                <p>{{ error }}</p>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </form>
+        </details>
+    </section>
+</div>
+{% endblock %}

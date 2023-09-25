@@ -1,0 +1,330 @@
+{% extends 'visualizer/base.html' %}
+{% load static %}
+{% block head_title %}Visualizer{% endblock %}
+{% block head_visualizer %}{% endblock %}
+
+{% block content %}
+<h1>Spectral Network Visualizer</h1>
+<div class="section-container">
+<section id="network-parameter-section">
+    <h2>Input</h2>
+    <div class="content-container-in-section">
+        <form id="spectral-network-form" action="{% url 'visualizer:get_network_data' %}" enctype='multipart/form-data'>
+            {% csrf_token %}
+            <section id="file-input-section" class="subsection">
+                <h3>File</h3>
+                <div class="content-container-in-subsection">
+                    {% for field in input_file_form %}
+                    <div class="flex-row label-input-container">
+                        <label for="{{ field.id_for_label }}" class="row-label">{{ field.label }}</label>
+                        <div class="flex-column input-message-container">
+                            {{ field }}
+                            <ul class="errorlist">
+                                {% for error in field.errors %}
+                                <li>{{ error | escape }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            <section id="graph-parameter-section" class="subsection">
+                <h3>Parameter Setting</h3>
+                <div class="content-container-in-subsection">
+                    <div id="network-parameter-tab-container" class="flex-row">
+                        <button id="basic-tab" type="button" class="parameter-tab active">Basic</button>
+                        <button id="quantitative-data-tab" type="button" class="parameter-tab">Quantitative Data</button>
+                        <button id="global-accession-tab" type="button" class="parameter-tab">Global Accession</button>
+                        <button id="reference-layer-tab" type="button" class="parameter-tab">Reference Layer</button>
+                        <button id="annotation-tab" type="button" class="parameter-tab">Annotation</button>
+                    </div>
+                    <div id="network-parameter-container">
+                        <div id="basic-parameters" class="parameter-window">
+                            <h4>Drawing Parameters</h4>
+                            {% for field in basic_parameter_form %}
+                            <div class="flex-row label-input-container">
+                                <label for="{{ field.id_for_label }}" class="row-label">{{ field.label }}</label>
+                                <div class="flex-column input-message-container">
+                                    {{ field }}
+                                    <ul class="errorlist empty">
+                                        {% for error in field.errors %}
+                                        <li>{{ error | escape }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="quantitative-data-parameters" class="parameter-window" style="display: none;">
+                            <h4>Extraction by Quantitative Data</h4>
+                            {% for field in quantitative_parameter_form %}
+                            <div class="flex-row label-input-container">
+                                <label for="{{ field.id_for_label }}" class="row-label">{{ field.label }}</label>
+                                <div class="flex-column input-message-container">
+                                    {{ field }}
+                                    <ul class="errorlist empty">
+                                        {% for error in field.errors %}
+                                        <li>{{ error | escape }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="global-accession-parameters" class="parameter-window" style="display: none;">
+                            <h4>Extraction by Global Accession</h4>
+                            {% for field in global_accession_parameter_form %}
+                            <div class="flex-row label-input-container">
+                                <label for="{{ field.id_for_label }}" class="row-label">{{ field.label }}</label>
+                                <div class="flex-column input-message-container">
+                                    {{ field }}
+                                    <ul class="errorlist empty">
+                                        {% for error in field.errors %}
+                                        <li>{{ error | escape }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="reference-layer-parameters" class="parameter-window" style="display: none;">
+                            <h4>Categorization of Reference Layers</h4>
+                            {% for field in reference_layer_parameter_form %}
+                            <div class="flex-row label-input-container">
+                                <label for="{{ field.id_for_label }}" class="row-label">{{ field.label }}</label>
+                                {% if field.field.widget.attrs.id == 'chemical-superclass-filer' %}
+                                <div id="layer-filter-container">
+                                    <div class="flex-column input-message-container">
+                                        <select id="dummy-layer-filter" disabled>
+                                            <option value="">unavailable</option>
+                                        </select>
+                                        {{ field }}
+                                        <ul class="errorlist empty">
+                                            {% for error in field.errors %}
+                                            <li>{{ error | escape }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <div class="flex-column input-message-container">
+                                    {{ field }}
+                                    <ul class="errorlist empty">
+                                        {% for error in field.errors %}
+                                        <li>{{ error | escape }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="annotation-parameters" class="parameter-window" style="display: none;">
+                            {% for field in annotation_parameter_form %}
+                            <div class="flex-row label-input-container">
+                                <label for="{{ field.id_for_label }}" class="row-label">{{ field.label|safe }}</label>
+                                <div class="flex-column input-message-container">
+                                    {{ field }}
+                                    <ul class="errorlist empty">
+                                        {% for error in field.errors %}
+                                        <li>{{ error | escape }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            {% endfor %}
+
+                            <div>
+                                <hr>
+                                <h4>Suspect Compound</h4>
+                                {% for field in suspect_compound_parameter_form %}
+                                {% if field.name == 'adducts_for_suspect_compound' %}
+                                <div class="flex-row label-input-container">
+                                    <label class="row-label">Adduct</label>
+                                    <div class="flex-column input-message-container">
+                                        {{ field }}
+                                        <ul class="errorlist empty">
+                                            {% for error in field.errors %}
+                                            <li>{{ error | escape }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <button id="btn-to-expand-adduct-container" class="open-close-icon-container" type="button">
+                                        <span class="material-symbols-outlined open-icon" title="Expand adduct window">open_in_full</span>
+                                        <span class="material-symbols-outlined close-icon" title="Close" style="display: none;">close_fullscreen</span>
+                                    </button>
+                                </div>
+                                {% else %}
+                                <div class="flex-row label-input-container">
+                                    <label for="{{ field.id_for_label }}" class="row-label">{{ field.label|safe }}</label>
+                                    <div class="flex-column input-message-container">
+                                        {{ field }}
+                                        <ul class="errorlist empty">
+                                            {% for error in field.errors %}
+                                            <li>{{ error | escape }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div>
+                                <hr>
+                                <h4>Mass defect</h4>
+                                {% for field in mass_defect_parameter_form %}
+                                <div class="flex-row label-input-container">
+                                    <label for="{{ field.id_for_label }}" class="row-label">{{ field.label|safe }}</label>
+                                    <div class="flex-column input-message-container">
+                                        {{ field }}
+                                        <ul class="errorlist empty">
+                                            {% for error in field.errors %}
+                                            <li>{{ error | escape }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <div id="btn-container-for-spectral-network-form" class="flex-row">
+                <button id="btn-to-create-network-graph" class="btn-submit" type="submit" value="create">Create Network</button>
+                &nbsp;
+                <button id="btn-to-update-network-graph" class="btn-submit" type="submit" value="update">Update Network</button>
+                &nbsp;
+                <button class="btn-reset" type="reset" value="update">Reset Parameters</button>
+            </div>
+        </form>
+    </div>
+</section>
+</div>
+<div class="section-container">
+    <section id="graph-section">
+        <h2>Network Graph</h2>
+        <div class="content-container-in-section" style="position: relative;">
+            <div class="overlay"></div>
+            <div id="my-hover-container"></div>
+            <section id="main-network-graph-section" class="subsection">
+                <div id="network-graph-container">
+                <div id="network-graph"></div>
+                <div id="plotly-loading-img-container" style="display: none;">
+                    <img src="{% static 'visualizer/image/loading_image.svg' %}">
+                </div>
+            </div>
+            </section>
+            <section id="node-removal-section" class="subsection" style="position: relative;">
+                <h3>Removing Nodes</h3>
+                <div class="content-container-in-subsection">
+                    <div id="btn-container-for-node-removal" class="flex-row">
+                        <button id="btn-to-execute-node-removal" form="spectral-network-form" class="btn-submit" type="submit" value="update">Execute</button>
+                        &nbsp;
+                        <button type="button" class="cancel-all-button submit-style">Cancel all</button>
+                    </div>
+                    <div id="container-of-nodes-to-remove" class="flex-column">
+                        <p id="label-for-container-of-nodes-to-remove">List of nodes to remove</p>
+                    </div>
+                    <p class="help-text">
+                        Please click on the
+                        <img id="img-of-btn-to-remove-node" src="{% static 'visualizer/image/btn_to_remove_node.PNG' %}" alt="Remove node" width="50px">
+                        button to add a node into the list above.
+                    </p>
+                </div>
+            </section>
+            <section id="selected-node-data-section" class="subsection">
+                <h3>Node/Edge Data</h3>
+                <div class="content-container-in-subsection">
+                    <p class="help-text">Please click on a node or edge on the graph.</p>
+                    <button id="btn-to-remove-node" type="button" class="submit-style">Remove node</button>
+                    <div class="flex-row">
+                        <div id="point-data-container"></div>
+                        <div id="compound-structure-container"></div>
+                    </div>
+                </div>
+            </section>
+            <section id="node-search-section" class="subsection">
+                <h3>Search Node</h3>
+                <div class="content-container-in-subsection">
+                    <p class="help-text">Changes the color of the specified node.</p>
+                    <div class="flex-row">
+                        <input id="node-color-to-search" type="color" name="node-color-to-search">
+                        <input id="input-node-to-search" type="text" placeholder="Global accession" name="node-to-search">
+                    </div>
+                    <p id="accession-search-result" style="visibility: collapse;"></p>
+                    <button id="btn-to-search-node" type="button" class="submit-style">Search</button>
+                </div>
+            </section>
+        </div>
+    </section>
+</div>
+<div class="section-container">
+    <section id="graph-layout-section">
+        <h2>Layout Parameters</h2>
+        <div id="graph-layout-container" class="content-container-in-section">
+            <div class="overlay"></div>
+            <button id="relayout-btn" type="button" class="submit-style">Re-layout</button>
+            <section class="subsection">
+                <div class="flex-column">
+                    <div class="flex-row label-input-container">
+                        <label for="input-marker-size" class="row-label">Node Size</label>
+                        <input id="input-marker-size" name="marker.size" type="number" class="layout-parameter data_update" step="0.1" min="0.1">
+                         <p>px</p>
+                    </div>
+                    <div class="dropdown-wrapper">
+                        <input id="dropdown-for-traces-to-update-node-size" type="checkbox" class="dropdown-input">
+                        <label for="dropdown-for-traces-to-update-node-size" class="flex-row dropdown-button">
+                            <span class="material-symbols-outlined symbol-add">add</span>
+                            <span class="material-symbols-outlined symbol-remove">remove</span>
+                            <p style="display: inline flow-root;">Trace Setting</p>
+                        </label>
+                        <div class="dropdown-box flex-column">
+                            <div class="dropdown-help">
+                                <p>Please select one or more traces to update the node size.<br>If no traces are selected, all of them will be updated.</p>
+                            </div>
+                            <div id="traces-to-update-node-size" class="dropdown-content">
+                                <button type="button" class="select-all-button">Select all</button>
+                                <button type="button" class="reset-button">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <section class="subsection">
+                <div class="flex-column">
+                    <div class="flex-row label-input-container">
+                        <label for="input-line-width" class="row-label">Edge Width</label>
+                        <input id="input-line-width" name="line.width" type="number" class="layout-parameter data_update" step="0.1" min="0.1">
+                        <p>px</p>
+                    </div>
+                    <div class="dropdown-wrapper">
+                        <input id="dropdown-for-traces-to-update-line-width" type="checkbox" class="dropdown-input">
+                        <label for="dropdown-for-traces-to-update-line-width" class="flex-row dropdown-button">
+                            <span class="material-symbols-outlined symbol-add">add</span>
+                            <span class="material-symbols-outlined symbol-remove">remove</span>
+                            <p style="display: inline flow-root;">Trace Setting</p>
+                        </label>
+                        <div class="dropdown-box flex-column">
+                            <div class="dropdown-help">
+                                <p>Please select one or more traces to update the edge width.<br>If no traces are selected, all of them will be updated.</p>
+                            </div>
+                            <div id="traces-to-update-line-width" class="dropdown-content">
+                                <button type="button" class="select-all-button">Select all</button>
+                                <button type="button" class="reset-button">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{% static 'js/plotly-2.12.1.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'visualizer/js/create_network_graph.js' %}"></script>
+<script type="text/javascript" src="{% static 'visualizer/js/relayout_network_graph.js' %}"></script>
+{% endblock %}

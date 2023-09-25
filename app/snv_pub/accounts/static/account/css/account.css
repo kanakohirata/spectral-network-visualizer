@@ -1,0 +1,194 @@
+#page-header {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: var(--z-index-top);
+  display: flex;
+  align-items: center;
+  height: 50px;
+  margin-bottom: 10px;
+  padding: 0 15px;
+  background-color: var(--pale-blue);
+}
+#page-header .header-item:first-child .link-to-top {
+  margin: 3px;
+  color: var(--gray);
+  font-size: 2rem;
+  font-weight: bold;
+}
+#page-header .header-item:last-child {
+  flex: 1 1 90%;
+  display: flex;
+  flex-flow: row-reverse nowrap;
+}
+#page-header .header-item:last-child #header-logout-form button {
+  height: 25px;
+  border-color: var(--gray);
+  background-color: transparent;
+}
+
+#account-content {
+  width: 700px;
+  margin: auto;
+  /* Password Reset Form -BEGIN */
+  /* Password Reset Form -END */
+  /* Signup Form -BEGIN */
+  /* Signup Form -END */
+}
+#account-content h1, #account-content h2 {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: var(--gray);
+}
+#account-content h1 {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 4rem;
+}
+#account-content .checkbox-label-container input:checked + label {
+  border-radius: 4px;
+  background-color: #59dac3;
+  color: #000;
+}
+#account-content .simple-submit-form {
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: center;
+}
+#account-content .simple-submit-form button {
+  font-size: 1.8rem;
+  width: auto;
+  padding: 10px 15px;
+}
+#account-content .form-container {
+  width: 500px;
+  margin: auto;
+  margin-top: 10px;
+  padding: 20px;
+  border: solid 1px var(--light-gray);
+  border-radius: 4px;
+}
+#account-content .form-container .message-container {
+  padding: 0px;
+  width: 100%;
+}
+#account-content .form-container form {
+  width: 400px;
+  margin: auto;
+}
+#account-content .form-container form.account-form .submit-container button {
+  font-size: 1.8rem;
+  width: auto;
+  padding: 10px 15px;
+}
+#account-content .form-container form > p {
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 1.6rem;
+}
+#account-content .form-container input[type=email], #account-content .form-container input[type=password], #account-content .form-container input[type=text] {
+  height: 35px;
+  border-color: var(--light-gray);
+}
+#account-content .form-container .submit-container {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+}
+#account-content #password-reset-form .label-input-container-z label {
+  flex: 0 0 60px;
+  padding-right: 15px;
+}
+#account-content #password-reset-form .label-input-container-z .input-message-container {
+  flex: 1 1 100%;
+}
+#account-content #password-reset-form .label-input-container-z .input-message-container input {
+  width: 100%;
+}
+#account-content #signup-form .help-text {
+  text-align: center;
+  font-size: 1.2rem;
+  color: var(--light-green);
+  cursor: default;
+}
+
+/* User Profile Page -BEGIN */
+#user-profile {
+  width: 600px;
+  margin: auto;
+  /* Primary Email Change Form -BEGIN */
+  /* Primary Email Change Form -END */
+  /* Adding Email Form -BEGIN */
+  /* Adding Email Form -END */
+  /* Deleting Account Form -BEGIN */
+  /* Deleting Account Form -END */
+}
+#user-profile h2 {
+  font-size: 3rem;
+}
+#user-profile h3 {
+  margin-bottom: 5px;
+  border-bottom: solid 1px var(--light-gray);
+}
+#user-profile .table-vertical-headers th {
+  width: 200px;
+  padding: 10px 0px 10px 15px;
+  text-align: left;
+  color: var(--gray);
+}
+#user-profile .section-2nd {
+  margin-bottom: 20px;
+}
+#user-profile .section-3rd {
+  margin-bottom: 20px;
+}
+#user-profile #email-list > li {
+  margin-bottom: 7px;
+  padding: 5px;
+  border: solid 1px var(--light-gray);
+}
+#user-profile #email-list > li:first-of-type {
+  border-radius: 4px 4px 0 0;
+}
+#user-profile #email-list > li:last-of-type {
+  border-radius: 0 0 4px 4px;
+}
+#user-profile #email-list > li > .flex-row {
+  position: relative;
+}
+#user-profile #email-list > li > .flex-row .account-form {
+  position: absolute;
+  right: 0px;
+}
+#user-profile #email-list > li > .email-attribute-list {
+  margin-left: 20px;
+  list-style-type: "- ";
+}
+#user-profile #email-list > li > .email-attribute-list .account-form {
+  margin-left: 20px;
+}
+#user-profile #change-primary-email-form .input-button-container {
+  height: 35px;
+}
+#user-profile #change-primary-email-form .input-button-container select, #user-profile #change-primary-email-form .input-button-container button {
+  height: 100%;
+}
+#user-profile #change-primary-email-form .input-button-container select {
+  margin-right: 15px;
+}
+#user-profile #add-email-form .input-button-container input, #user-profile #add-email-form .input-button-container button {
+  height: 35px;
+}
+#user-profile #add-email-form .input-button-container .input-message-container {
+  max-width: 300px;
+  margin-right: 15px;
+}
+#user-profile #delete-account-form .input-button-container input, #user-profile #delete-account-form .input-button-container button {
+  height: 35px;
+}
+#user-profile #delete-account-form .input-button-container .input-message-container {
+  max-width: 300px;
+  margin-right: 15px;
+}
+
+/* User Profile Page -END *//*# sourceMappingURL=account.css.map */

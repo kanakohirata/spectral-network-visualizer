@@ -1,0 +1,49 @@
+.a-tag-style {
+  background-color: transparent !important;
+  text-decoration: none !important;
+  color: var(--light-blue) !important;
+}
+
+.background-color-transparent {
+  background-color: transparent !important;
+}
+
+.background-color-white {
+  background-color: #ffffff !important;
+}
+
+.color-gray {
+  color: var(--gray) !important;
+}
+
+.color-main-red {
+  color: var(--main-red) !important;
+}
+
+.color-main-green {
+  color: var(--main-green) !important;
+}
+
+.color-light-green {
+  color: var(--light-green) !important;
+}
+
+.position-relative {
+  position: relative !important;
+}
+
+.width-600px {
+  width: 600px !important;
+}
+
+.margin-auto {
+  margin: auto;
+}
+
+.padding-left-10px {
+  padding-left: 10px;
+}
+
+.justify-center {
+  justify-content: center;
+}/*# sourceMappingURL=prior_class.css.map */

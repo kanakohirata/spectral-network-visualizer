@@ -1,0 +1,208 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>IMS2DB | Signup</title>
+
+    <!-- My style -->
+    <link rel="stylesheet" type="text/css" href="/static/css/mystyle.css">
+    <link href="https://use.fontawesome.com/releases/v5.6.1/css/all.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+
+    
+<link rel="stylesheet" type="text/css" href="/static/account/css/custom_account_style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200">
+
+
+</head>
+
+<body>
+    <div id="wrapper">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-list-container-left">
+                <ul class="navbar-list">
+                    <li class="navbar-item">
+                        <div class="navbar-top nav-elem">
+                            <a class="navbar-brand" href="/">IMS2DB</a>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+                        <div class="navbar-details-container nav-elem">
+                            <details class="navbar-details">
+                                <summary class="navbar-summary">Browse<div class="triangle-down"></div></summary>
+                                <div class="dropdown-container">
+                                    <ul class="dropdown-menu">
+                                        <li class="dropdown-item">
+                                            <a class="nav-link " href="/spectrum/">IMS Spectra</a>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <a class="nav-link " href="/spectrum/fragment/">IMS Fragments</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+                        <div class="navbar-details-container nav-elem">
+                            <details class="navbar-details">
+                                <summary class="navbar-summary">Search<div class="triangle-down"></div></summary>
+                                <div class="dropdown-container">
+                                    <ul class="dropdown-menu">
+                                        <li class="dropdown-item">
+                                            <a class="nav-link " href="/spectrum/search/">IMS Spectra</a>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <a class="nav-link " href="/spectrum/fragment/search/">IMS Fragment</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+                        <div class="navbar-details-container nav-elem">
+                            <details class="navbar-details">
+                                <summary class="navbar-summary">Batch Search<div class="triangle-down"></div></summary>
+                                <div class="dropdown-container">
+                                    <ul class="dropdown-menu">
+                                        <li class="dropdown-item">
+                                            <a class="nav-link " href="/spectrum/batch-search/">IMS Spectra</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </details>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+                        <div class="navbar-top nav-elem">
+                            <a class="navbar-brand" href="/statistics/">Statistics</a>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+                        <div class="navbar-top nav-elem">
+                            <a class="navbar-brand" href="/about/">About</a>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+                        <div class="navbar-top nav-elem">
+                            <a class="navbar-brand" href="/about/">Contact</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="nav-list-container-right">
+                <ul class="navbar-list">
+                    <li class="navbar-item">
+                        <div class="navbar-search-container nav-elem">
+                            <!-- link to spectrum_list -->
+                             <form id="nav-search-form" onSubmit="validateEmpty('nav-search-form')" method="get" action="/spectrum/results/">
+                                 <input name="search_type" value="nav_search" type="hidden">
+                                 <div class="search-input-container">
+                                    <input class="ipt-txt" name="query" value="" type="text">
+                                 </div>
+                                 <div class="search-btn-container">
+                                     <button class="search-btn" type="submit">
+                                         <span>
+                                             <i class="fas fa-search"></i>
+                                         </span>
+                                     </button>
+                                 </div>
+                            </form>
+                        </div>
+                    </li>
+                    <li class="navbar-item">
+
+                        <div class="navbar-top nav-elem">
+                            <details class="navbar-details">
+                                <summary class="navbar-summary">
+                                    <span class="material-icons">person</span><div class="triangle-down"></div>
+                                </summary>
+                                <div class="dropdown-container">
+                                    <ul class="dropdown-menu">
+                                        
+                                        <li class="dropdown-item">
+                                            <a class="navbar-brand" href="/accounts/login/">Sign in</a>
+                                        </li>
+                                        <li class="dropdown-item">
+                                            <a class="navbar-brand" href="/accounts/signup/">Sign up</a>
+                                        </li>
+                                        
+                                    </ul>
+                                </div>
+                            </details>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="page-wrapper">
+            
+
+            
+
+            <div class="content-container blue-theme">
+                
+<h1 class="h1-type1">Create an IMS2DB Account</h1>
+<div class="row-element">
+    <div class="form-container justify-center">
+        <form id="signup-form" method="post" action="/accounts/signup/">
+            <input type="hidden" name="csrfmiddlewaretoken" value="Sjf7HXePkJab6xpNl9FBvJxPONJLaFeVrszjL4E7bOigXysG7vvnoZRtzNa4gx2J">
+            
+            <div class="row-flex">
+                <div class="column-1">E-mail</div>
+                <div class="column-2"><input type="email" name="email" value="hoge@test.mail" placeholder="" required id="id_email"></div>
+            </div>
+            <ul class="errorlist"><li>A user is already registered with this e-mail address.</li></ul>
+            
+            <div class="row-flex">
+                <div class="column-1">Username</div>
+                <div class="column-2"><input type="text" name="username" value="hoge-hoge" placeholder="" autofocus="autofocus" minlength="1" maxlength="150" required id="id_username"></div>
+            </div>
+            <ul class="errorlist"><li>A user with that username already exists.</li></ul>
+            
+            <div class="row-flex">
+                <div class="column-1">Password</div>
+                <div class="column-2"><input type="password" name="password1" placeholder="" required id="id_password1"></div>
+            </div>
+            
+            
+            <div class="row-flex">
+                <div class="column-1">Password (again)</div>
+                <div class="column-2"><input type="password" name="password2" placeholder="" required id="id_password2"></div>
+            </div>
+            
+            
+
+            
+            <div class="submit-container">
+                <button class="btn-submit" type="submit">Register</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+            </div>
+
+
+            <!-- Footer -->
+            <footer class="footer">
+                <div class="container"></div>
+            </footer>
+
+            <script type="text/javascript" src="/static/js/my_js_functions.js"></script>
+            
+        </div>
+  	</div>
+</body>
+
+</html>

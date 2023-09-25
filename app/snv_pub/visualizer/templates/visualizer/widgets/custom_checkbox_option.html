@@ -1,0 +1,8 @@
+<div class="flex-row checkbox-label-container">
+    {% include "django/forms/widgets/input.html" %}
+    <label for="{{ widget.attrs.id }}" class="flex-row">
+        {{ widget.label }}
+        <span class="material-symbols-outlined blank-checkbox">check_box_outline_blank</span>
+        <span class="material-symbols-outlined selected-checkbox">select_check_box</span>
+    </label>
+</div>

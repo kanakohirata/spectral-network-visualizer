@@ -1,0 +1,34 @@
+version: '3'
+
+volumes:
+  snv-pub-pgdata:
+
+services:
+  db:
+    container_name: snv-db
+    image: postgres:10.16
+    ports:
+      - 5433:5432
+    volumes:
+      - snv-pub-pgdata:/var/lib/postgresql/data
+      - ./postgresql/init:/docker-entrypoint-initdb.d
+    environment:
+      - POSTGRES_PASSWORD=postgres
+
+  web:
+    container_name: snv-web
+    build: .
+    image: django-snv
+    ports:
+      - 8080:8000
+    volumes:
+      - ../app:/app
+    working_dir: /app/snv_pub
+    depends_on:
+      - db
+    environment:
+      - DJANGO_SETTINGS_MODULE=snv_pub.settings_dev
+    command: /bin/bash -c  "./startup.sh"
+    tty: true
+    
+    

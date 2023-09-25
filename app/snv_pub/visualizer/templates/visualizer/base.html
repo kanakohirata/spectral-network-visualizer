@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block title %}SNV | {% block head_title %}{% endblock %}
+{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{% static 'visualizer/css/visualizer.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'visualizer/css/graph_style.css' %}">
+<script type="text/javascript" src="{% static 'visualizer/js/display_controller.js' %}"></script>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+{% block head_visualizer %}{% endblock %}
+{% endblock %}
+
+{% block page_header %}
+<header id="page-header" class="visualiser-page">
+    <div class="header-item">
+        <a class="link-to-top" href="{% url 'visualizer:spectral_network' %}">Visualizer</a>
+    </div>
+    <div class="header-item">
+        {% if user.is_authenticated %}
+        <form id="header-logout-form" method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <button class="button-like signout" type="submit">Sign out</button>
+        </form>
+        <a class="button-like profile" href="{% url 'accounts:profile' %}">Profile</a>
+        {% else %}
+        <a class="button-like signin" href="{% url 'account_signup' %}">Sign up</a>
+        <a class="button-like signup" href="{% url 'account_login' %}">Sign in</a>
+        {% endif %}
+    </div>
+</header>
+{% endblock %}
+
+{% block contents %}
+{% block content %}{% endblock %}
+{% block scripts %}{% endblock %}
+{% endblock %}

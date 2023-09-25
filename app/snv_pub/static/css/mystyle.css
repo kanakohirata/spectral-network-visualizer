@@ -1,0 +1,457 @@
+/* Custom property -BEGIN */
+
+:root {
+	--width-structure-container: 50%;
+	--light-blue: #00a1e9;
+	--light-gray: #c0c0c0;
+	--light-orange: #e9c482;
+	--gray: #555555;
+	--gray-blue: #95a6b8;
+	--main-green: #27453c;
+	--main-orange: #d7931c;
+	--main-red: #d65e42;
+	--main-blue: #00448c;
+	--main-red: #de4537;
+	--dark-white: #f4f4f4;
+	--pale-blue: #c0d1e3;
+	--pale-red: #f7d1cd;
+}
+
+/* Custom property -END */
+
+
+/* Element style across pages -BEGIN */
+* {
+	box-sizing: border-box;
+	margin: 0px;
+}
+
+html {
+    font-size: 62.5%; /* font-size 1em = 10px on default browser settings */
+} 
+  
+body {
+    margin: 0px;
+    font-size: 1.4rem;
+    font-family: 'Segoe UI', Helvetica, sans-serif, Arial;
+}
+
+a {
+	text-decoration: none;
+	color: var(--light-blue);
+}
+
+label {
+    display: inline flow-root;
+    width: max-content;
+    color: var(--gray);
+    font-weight: 600;
+}
+
+input, select {
+    height: 35px;
+}
+
+select, button {
+	cursor: pointer;
+}
+
+input, select, button, textarea, .submit-style {
+    border-radius: 4px;
+    border: 1px solid var(--gray);
+}
+
+button, .submit-style {
+    height: 25px;
+    border: 0px;
+}
+
+input:disabled, select:disabled, textarea:disabled {
+	background: #ccc;
+}
+
+input[type="file"] {
+    border-radius: 0px;
+    border: 0px;
+    border-bottom: 1px solid var(--gray);
+}
+
+input[type="submit"], .submit-style, button[type="submit"], button[type="reset"] {
+    width: 120px;
+}
+
+
+input[type="submit"], .submit-style, button[type="submit"] {
+    cursor: pointer;
+	color: #ffffff;
+    background-color: var(--light-blue);
+}
+
+button[type="reset"] {
+    cursor: pointer;
+    color: #ffffff;
+    background-color: #ff5246;
+}
+
+section {
+    width: 100%;
+}
+
+section.subsection {
+	width: 100%;
+    margin-bottom: 10px;
+}
+
+h1 {
+	width: 100%;
+    font-size: 7.0rem;
+	font-weight: bold;
+    color: var(--gray);
+	text-align: left;
+	margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 3.0rem;
+	font-weight: bold;
+    color: var(--gray);
+    background-color: var(--pale-blue);
+    /* margin-bottom: 10px; */
+    padding-bottom: 5px;
+}
+
+.checkbox-label-container input:checked + label {
+    /* background-color: #00a587; */
+    background-color: #59dac3;
+    color: #000000;
+}
+
+.select-all-button, .reset-button {
+    width: 65px;
+}
+
+.select-all-button {
+    /* background-color: #5cece0; */
+    /* background-color: #74f2db; */
+    background-color: #59dac3;
+}
+
+.cancel-all-button {
+    color: #ffffff;
+    background-color: #ff5246;
+}
+
+.cancel-item-container {
+    align-items: center;
+}
+
+.cancel-button {
+    padding: 2px 3px 0px;
+    height: 1.8rem;
+    background: none;
+}
+
+.cancel-button span{
+    font-size: 1.5rem;
+    color: #ff5246;
+}
+
+hr {
+    height: 1px;
+    border: 0px;
+    border-top: 1px solid var(--light-gray);
+}
+
+/* Element style across pages -END */
+
+.content-container {
+	width: 100%;
+	min-width: 760px;
+	min-height: 520px;
+	padding: 0 30px;
+	margin: 0 auto;
+}
+
+.flex-row {
+	display: flex;
+	flex-flow: row wrap;
+	width: 100%;
+}
+
+.flex-column {
+	display: flex;
+	flex-flow: column nowrap;
+	width: 100%;
+}
+
+/* ------------------------------------------ */
+
+.flex-row.label-input-container {
+    flex-wrap: nowrap;
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.flex-row.label-input-container .row-label {
+    flex: 0 0 30%;
+}
+
+.flex-row.label-input-container .input-message-container {
+    flex: 0 0 70%;
+}
+
+/* ------------------------------------------ */
+
+.flex-row.checkbox-label-container {
+    flex-wrap: nowrap;
+    margin-bottom: 5px;
+    align-items: center;
+}
+
+.flex-row.checkbox-label-container input {
+    flex: 0 0 0px;
+    width: 0px;
+    visibility: collapse;
+    height: initial;
+}
+
+.flex-row.checkbox-label-container > label.flex-row {
+    position: relative;
+    flex: 1 1 100%;
+    width: 100%;
+    display: flex;
+    padding-left: 50px;
+    align-items: center;
+}
+
+.flex-row.checkbox-label-container > label.flex-row:hover {
+    cursor: pointer;
+}
+
+.flex-row.checkbox-label-container > label.flex-row > .material-symbols-outlined {
+    position: absolute;
+    top: 0.5px;
+    left: 25px;
+    transform: translateX(-50%);
+}
+
+.flex-row.checkbox-label-container > label > .material-symbols-outlined.selected-checkbox {
+    display: none;
+}
+.flex-row.checkbox-label-container input:checked + label > .material-symbols-outlined.selected-checkbox {
+    display: initial;
+}
+.flex-row.checkbox-label-container input:checked + label > .material-symbols-outlined.blank-checkbox {
+    display: none;
+}
+
+/* ------------------------------------------ */
+
+/* Django Message style -BEGIN */
+/* Message at top screen */
+div.message-container {
+	padding: 2px 30px 0;
+}
+
+div.message-container ul.messages {
+    margin-bottom: 10px;
+    list-style-type: none;
+}
+
+div.message-container ul.messages.empty {
+    margin: 0px;
+}
+
+div.message-container li.message {
+	padding: 7px 10px 7px;
+	border-radius: 4px;
+	text-align: center;
+	margin: 2px;
+}
+
+div.message-container li.message.info {
+	background-color: #c7e4eb;
+	color: #005063;
+}
+
+div.message-container li.message.success {
+	background-color: #c1e8d6;
+	color: #044225;
+}
+
+div.message-container li.message.warning {
+	background-color: #faf1c3;
+	color: #3d3300;
+}
+
+div.message-container li.message.error {
+	background-color: #ffb5b5;
+	color: #6b0707;
+}
+
+/* Form validation message */
+div.form-field-message-container.error {
+	color: red;
+    font-size: 1.2rem;
+}
+
+ul.errorlist {
+    padding: 0px;
+    margin-bottom: 5px;
+    list-style-type: none;
+}
+
+ul.errorlist.empty {
+    margin: 0px;
+}
+
+ul.errorlist li {
+    color: red;
+    font-size: 1.2rem;
+}
+
+
+/* Django Message style -END */
+
+/* Open / Close button -BEGIN  */
+.open-close-icon-container {
+    padding: 1px;
+}
+
+.open-close-icon-container .open-icon,
+.open-close-icon-container .close-icon {
+    font-size: 20px;
+    color: var(--gray);
+}
+/* Open / Close button -END  */
+
+/* Popup layout -BEGIN */
+.popup-input, .popup-overlay {
+    display: none;
+}
+
+.popup-input:checked + .popup-overlay {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0px;
+	left: 0px;
+    z-index: 1000;
+    background-color: #00000070;
+}
+
+.popup-box.flex-column {
+    width: max-content;
+    max-width: 1000px;
+    position: fixed;
+	top: 50%;
+	left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #ffffff;
+}
+
+.popup-box.flex-column .close-popup {
+    align-self: flex-end;
+}
+
+.popup-box.flex-column .popup-help {
+    font-size: smaller;
+    align-self: center;
+}
+
+.popup-box.flex-column .popup-content {
+    align-self: center;
+    padding: 10px 5px 5px 5px;
+}
+/* Popup layout -END */
+
+
+/* Dropdown layout -BEGIN */
+.dropdown-wrapper {
+    position: relative;
+}
+
+.dropdown-input, .dropdown-box, .dropdown-button > .symbol-remove {
+    display: none;
+}
+
+.dropdown-input:checked ~ .dropdown-button > .symbol-remove{
+    display: initial;
+}
+.dropdown-input:checked ~ .dropdown-button > .symbol-add{
+    display: none;
+}
+
+.flex-row.dropdown-button {
+    width: max-content;
+    align-items: center;
+}
+.flex-row.dropdown-button:hover {
+    cursor: pointer;
+}
+
+.dropdown-box {
+    position: relative;
+    left: 20px;
+    width: calc(100% - 20px);
+}
+
+.dropdown-input:checked ~ .dropdown-box {
+    display: block;
+}
+
+.dropdown-box.flex-column .dropdown-help {
+    font-size: smaller;
+    align-self: center;
+}
+
+.dropdown-box.flex-column .dropdown-content {
+    max-height: 500px;
+    overflow-y: auto;
+    align-self: center;
+    padding: 10px 5px 5px 0px;
+}
+
+/* Dropdown layout -END */
+
+.overlay {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1000;
+    background-color: var(--gray);
+    opacity: 0.3;
+}
+
+/* Vertical table layout -END */
+
+.table-vertical-headers {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    word-break: break-word;
+}
+
+.table-vertical-headers tr {
+    display: table-row;
+    border-bottom: solid 1px var(--light-gray);
+    background-color: var(--dark-white);
+}
+
+.table-vertical-headers tr {
+    display: table-row;
+    border-bottom: solid 1px var(--light-gray);
+    background-color: #ffffff;
+}
+
+.table-vertical-headers tr:nth-child(2n+1) {
+    background-color: var(--dark-white);
+}
+
+.table-vertical-headers th,
+.table-vertical-headers td {
+    overflow-wrap: anywhere;
+}

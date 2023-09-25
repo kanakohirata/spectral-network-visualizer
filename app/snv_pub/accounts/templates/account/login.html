@@ -1,0 +1,56 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Sign In" %}{% endblock %}
+
+{% block color-theme %}blue-theme{% endblock %}
+
+{% block account_content%}
+<h1>Sign in to SpecNetV</h1>
+<div class="form-container">
+    {% if form.non_field_errors %}
+    <div class="message-container">
+        <ul class="messages">
+            {% for error in form.non_field_errors %}
+                <li class="message error">
+                    <p>{{ error }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <form id="signin-form" method="post" action="{% url 'account_login' %}" class="account-form">
+        {% csrf_token %}
+        {% for field in form %}
+        {% if field.auto_id == 'id_remember' %}
+        <div class="label-input-container-z checkbox-label-container">
+            <input id="id_remember" type="checkbox" name="remember">
+            <label class="r-label" for="id_remember">
+                {{ field.label }}
+                <span class="material-symbols-outlined blank-checkbox">check_box_outline_blank</span>
+                <span class="material-symbols-outlined selected-checkbox">select_check_box</span>
+            </label>
+        </div>
+        {% else %}
+        <div class="label-input-container-f">
+            <label>{{ field.label }}</label>
+            <div class="input-message-container">
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        </div>
+        {% endif %}
+        {{ field.errors }}
+        {% endfor %}
+        <div class="submit-container">
+            <button class="btn-submit" type="submit">Sign in</button>
+        </div>
+    </form>
+</div>
+<div class="flex-row justify-center">
+    <a href="{% url 'account_signup' %}">Create an account.</a>
+    <span style="padding:0 5px; color:var(--gray);">|</span>
+    <a href="{% url 'account_reset_password' %}">Forget password?</a>
+</div>
+{% endblock %}

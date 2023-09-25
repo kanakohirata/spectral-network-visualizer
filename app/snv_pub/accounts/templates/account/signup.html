@@ -1,0 +1,53 @@
+{% extends 'account/base.html' %}
+{% load static %}
+{% load i18n %}
+
+{% block head_title %}{% trans "Signup" %}{% endblock %}
+
+
+{% block result_msg %}
+{% if msg %}
+<div class="masthead-container">
+    <div class="masthead-elem result-msg-container">
+        <p class="result-msg">{{ msg }}</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block color-theme %}blue-theme{% endblock %}
+{% block account_content%}
+<h1>Create an SpecNetV Account</h1>
+<p style="text-align: center;">{% blocktrans %}Already have an account? Then please <a href="{{ login_url }}">sign in</a>.{% endblocktrans %}</p>
+<div class="form-container">
+    <form id="signup-form" method="post" action="{% url 'account_signup' %}" class="account-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="message-container">
+            <ul class="messages">
+                {% for error in form.non_field_errors %}
+                    <li class="message error">
+                        <p>{{ error }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% for field in form %}
+        <div class="label-input-container-f">
+            <label>{{ field.label }}</label>
+            <div class="input-message-container">
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="submit-container">
+            <button class="btn-submit" type="submit">Create Account</button>
+        </div>
+        <p class="help-text">A confirmation e-mail will be sent.</p>
+    </form>
+</div>
+{% endblock %}

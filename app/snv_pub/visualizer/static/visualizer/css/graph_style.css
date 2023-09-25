@@ -1,0 +1,10 @@
+.custom-hover-content {
+  position: absolute;
+  display: block;
+  width: -webkit-max-content;
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 400px;
+  padding: 3px;
+  border: 1px solid var(--gray);
+}/*# sourceMappingURL=graph_style.css.map */
