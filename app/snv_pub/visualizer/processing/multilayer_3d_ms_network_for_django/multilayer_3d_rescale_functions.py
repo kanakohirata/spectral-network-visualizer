@@ -569,14 +569,28 @@ def get_rescaled_geometry_for_3d_network_x(list_dic_edges_nodes_graph_by_layer ,
         for node in l_nodes :
             node_info =  dic_cluster_total_input_idx_MOD_vs_node_info[node]
             #  2.7   node_info_str = "node:" + node.decode('utf-8') + ";\n" + node_info.spec_cluster.global_accession.decode('utf-8') + ";\n" + node_info.spec_cluster.compound_name.decode('utf-8')
-            node_info_str = "{" +   r"'NODE':" + node +  \
-                            r",'PREC_MZ':" + str(node_info["spec_cluster"]["represen_spec_uni"]["precursor_mz"]) + \
-                            r",'RT_SEC':" + str(node_info["spec_cluster"]["represen_spec_uni"]["retention_time_in_sec"]) + \
-                            r",'TOTAL_INPUT_IDX_MOD':"  +  node_info["total_input_idx_mod"] + \
-                            ";'SUSPECT_NAME':" + node_info["name"] + \
-                            ";'COMPOUND_NAME':" + node_info["spec_cluster"]["compound_name"] + \
-                            r",'GLOBAL_ACCESSION':" + node_info["spec_cluster"]["global_accession"] +\
-                            "}"
+            
+            _precursor_mz = 0
+            _retention_time_in_sec = 0
+            _total_input_idx_mod = ''
+            _suspect_name = ''
+            _compound_name = ''
+            _global_accession = ''
+            if node_info["spec_cluster"]["represen_spec_uni"]["precursor_mz"]:
+                _precursor_mz = node_info["spec_cluster"]["represen_spec_uni"]["precursor_mz"]
+            if node_info["spec_cluster"]["represen_spec_uni"]["retention_time_in_sec"]:
+                _retention_time_in_sec = node_info["spec_cluster"]["represen_spec_uni"]["retention_time_in_sec"]
+            if node_info["total_input_idx_mod"]:
+                _total_input_idx_mod = node_info["total_input_idx_mod"]
+            if node_info["name"]:
+                _suspect_name = node_info["name"]
+            if node_info["spec_cluster"]["compound_name"]:
+                _compound_name = node_info["spec_cluster"]["compound_name"]
+            if node_info["spec_cluster"]["global_accession"]:
+                _global_accession = node_info["spec_cluster"]["global_accession"]
+            
+            node_info_str = f"{{'NODE':{node},'PREC_MZ':{_precursor_mz},'RT_SEC':{_retention_time_in_sec},'TOTAL_INPUT_IDX_MOD':{_total_input_idx_mod}"\
+                            f",'SUSPECT_NAME':{_suspect_name},'COMPOUND_NAME':{_compound_name},'GLOBAL_ACCESSION':{_global_accession}"
 
             l_nodes_str.append(node_info_str)
 

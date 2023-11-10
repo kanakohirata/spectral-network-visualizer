@@ -167,7 +167,6 @@ def read_cluster_attribute(dic_config):
     for key, row in df_clusterinfo.iterrows():
         valid_entry = 1
         count += 1
-        cluster_id = int(row['CLUSTER_ID'])
 
         l_cluster_total_input_idx.append(str(count))
         ############################################
@@ -179,7 +178,7 @@ def read_cluster_attribute(dic_config):
         ############################################
         # get info from the file-----------------
         # print "IS THIS row['CLUSTER_ID']" , row['CLUSTER_ID']
-        dic_clst["cluster_id"] = int((row['CLUSTER_ID']))
+        dic_clst["cluster_id"] = row['CLUSTER_ID']
 
         # !!!!!!!!!!!!!!!!!!!!!!!!!!1
         # get rid of "  mark, which cause trouble later on in Dash interface.
@@ -252,17 +251,17 @@ def read_edge_info(dic_config):
         # obj_edge_info = edge_info_a1.Edge_info()
         # obj_edge_info = Edge_info()
         dic_edge_info = dedicated_dictionaries.get_initialized_dic_edge_info()
-        dic_edge_info["spec_cluster_x_id"] = int(row['X_CLUSTERID'])
+        dic_edge_info["spec_cluster_x_id"] = row['X_CLUSTERID']
         # obj_edge_info.spec_cluster_x_global_accession = row['REP_SPECTRUM_X_GLOBAL_ACCESSION']
         x_global_accession = row['REP_SPECTRUM_X_GLOBAL_ACCESSION']
         dic_edge_info["spec_cluster_x_global_accession"] = x_global_accession.replace('"', '')
 
-        dic_edge_info["spec_cluster_y_id"] = int(row['Y_CLUSTERID'])
+        dic_edge_info["spec_cluster_y_id"] = row['Y_CLUSTERID']
         # obj_edge_info.spec_cluster_y_global_accession = row['REP_SPECTRUM_Y_GLOBAL_ACCESSION']
         y_global_accession = row['REP_SPECTRUM_Y_GLOBAL_ACCESSION']
         dic_edge_info["spec_cluster_y_global_accession"] = y_global_accession.replace('"', '')
 
-        l_edges.append((int(row['X_CLUSTERID']), int(row['Y_CLUSTERID'])))
+        l_edges.append((row['X_CLUSTERID'], row['Y_CLUSTERID']))
 
         dic_edge_info["spec_sim_score"] = float(row['SCORE'])
         dic_edge_info["delta_mz"] = float(row['DELTA_MZ'])
@@ -618,8 +617,8 @@ def select_nodes_based_on_prec_mz(conf_o, dic_cluster_total_input_idx_vs_cluster
     dic_cluster_total_input_idx_vs_cluster_info_new = {}
 
     for total_input_idx, cl_o in dic_cluster_total_input_idx_vs_cluster_info.items():
-        if cl_o["represen_spec_uni"]["precursor_mz"] > conf_o["mass_lower_limit"] and cl_o["represen_spec_uni"][
-            "precursor_mz"] < conf_o["mass_higher_limit"]:
+        if cl_o["represen_spec_uni"]["precursor_mz"] >= conf_o["mass_lower_limit"] and cl_o["represen_spec_uni"][
+            "precursor_mz"] <= conf_o["mass_higher_limit"]:
             dic_cluster_total_input_idx_vs_cluster_info_new[total_input_idx] = cl_o
 
     return dic_cluster_total_input_idx_vs_cluster_info_new
