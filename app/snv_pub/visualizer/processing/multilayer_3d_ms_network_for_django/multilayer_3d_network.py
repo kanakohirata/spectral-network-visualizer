@@ -1,34 +1,25 @@
 # TO DO
 #  "select_nodes_based_on_product_mz_required"
 #           currently only examine representative spec.
-import os.path
-import zipfile
-
-import plotly
-import plotly.graph_objs as go
-
-import copy
 import ast
-import sys
-import networkx as nx
-import pandas as pd
-
-import glob
-
+import copy
 import dask.dataframe as dd
-
-# import spectrum_uni_a2
-# import spec_cluster_a1
-from . import dedicated_dictionaries
-from . import suspect_compound
-from . import multilayer_3d_rescale_functions as m3d_rescale
-from . import multilayer_3d_mesh_functsions as m3d_mesh
-
-from . import config_ml3dnet
-from . import read_t3db_a1
-from . import feature_table_reader
-
+from django.core.cache import cache
+import glob
 from logging import getLogger
+import networkx as nx
+import os.path
+import pandas as pd
+import plotly.graph_objs as go
+import sys
+import zipfile
+from . import dedicated_dictionaries
+from . import feature_table_reader
+from . import multilayer_3d_mesh_functsions as m3d_mesh
+from . import multilayer_3d_rescale_functions as m3d_rescale
+from . import read_t3db_a1
+from . import suspect_compound
+
 
 logger = getLogger(__name__)
 
@@ -323,7 +314,13 @@ def read_external_cmpd_info(dic_config, dic_cluster_total_input_idx_vs_cluster_i
 
     list_t3db_inchikey_complete = []
     list_t3db_inchikey_head = []
-    list_t3db_obj = read_t3db_a1.read_t3db_a1_interparse(path_t3db_xml)
+
+    # Use cache of list_t3db_obj
+    list_t3db_obj = cache.get('list_t3db_obj')
+    if not list_t3db_obj:
+        list_t3db_obj = read_t3db_a1.read_t3db_a1_interparse(path_t3db_xml)
+        cache.set('list_t3db_obj', list_t3db_obj, 60 * 10)
+    
     for t3db_obj in list_t3db_obj:
         list_t3db_inchikey_complete.append(t3db_obj.inchi_key)
         list_t3db_inchikey_head.append(t3db_obj.inchi_key.split('-')[0])
