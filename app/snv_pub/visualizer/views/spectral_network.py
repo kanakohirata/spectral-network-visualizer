@@ -17,10 +17,10 @@ import time
 
 from ..files.uploadhandler import TemporaryDirectoryUploadHandler
 from ..forms import *
-from ..processing.multilayer_3d_ms_network_for_django import config_ml3dnet
-from ..processing.multilayer_3d_ms_network_for_django import multilayer_3d_network
-from ..processing.multilayer_3d_ms_network_for_django import main_multilayer_3d_network_visualizer
-from ..processing.multilayer_3d_ms_network_for_django import make_colormap
+from ..processing.multilayer_3d_ms_network import config_ml3dnet
+from ..processing.multilayer_3d_ms_network import multilayer_3d_network
+from ..processing.multilayer_3d_ms_network import main_multilayer_3d_network_visualizer
+from ..processing.multilayer_3d_ms_network import make_colormap
 
 logger = getLogger(__name__)
 BASE_DIR = settings.BASE_DIR
@@ -139,7 +139,7 @@ class GetNetworkData(generic.TemplateView):
         if not edge_file:
             edge_filepath = os.path.join(
                 BASE_DIR,
-                'visualizer/processing/multilayer_3d_ms_network_for_django/output_test_0/output_.edgeinfo.tsv'
+                'visualizer/processing/multilayer_3d_ms_network/output_test_0/output_.edgeinfo.tsv'
             )
         else:
             edge_filepath = edge_file.temporary_file_path()
@@ -147,7 +147,7 @@ class GetNetworkData(generic.TemplateView):
         if not attribute_file:
             attribute_filepath = os.path.join(
                 BASE_DIR,
-                'visualizer/processing/multilayer_3d_ms_network_for_django/output_test_0/output_.cluster_attribute.tsv'
+                'visualizer/processing/multilayer_3d_ms_network/output_test_0/output_.cluster_attribute.tsv'
             )
         else:
             attribute_filepath = attribute_file.temporary_file_path()
@@ -201,13 +201,13 @@ class GetNetworkData(generic.TemplateView):
         elif config.get('filter_select_category') == 'list_compound_categories':  # TODO: Temporary
             config['type_attribute_for_layer_separation'] = 'list_compound_categories'
             config['foldername_ext_cmpd_info'] = os.path.join(BASE_DIR,
-                                                              'visualizer/processing/multilayer_3d_ms_network_for_django/t3db_xml/')  # TODO: Temporary
+                                                              'visualizer/processing/multilayer_3d_ms_network/t3db_xml/')  # TODO: Temporary
             logger.warning(f'config["foldername_ext_cmpd_info"]: {config["foldername_ext_cmpd_info"]}')
 
         if request.POST.get('color_toxic_compound') == 'true':
             config['color_toxic_compound'] = True
             config['foldername_ext_cmpd_info'] = os.path.join(BASE_DIR,
-                                                              'visualizer/processing/multilayer_3d_ms_network_for_django/t3db_xml/')  # TODO: Temporary
+                                                              'visualizer/processing/multilayer_3d_ms_network/t3db_xml/')  # TODO: Temporary
 
         # Quantitative parameters
         if feature_file:

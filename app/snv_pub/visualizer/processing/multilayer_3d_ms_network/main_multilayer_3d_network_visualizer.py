@@ -5,8 +5,8 @@ import numpy as np
 import plotly.colors as pcolors
 from rdkit import Chem
 import sys
-from visualizer.processing.multilayer_3d_ms_network_for_django import multilayer_3d_network
-from visualizer.processing.multilayer_3d_ms_network_for_django import make_colormap
+from visualizer.processing.multilayer_3d_ms_network import multilayer_3d_network
+from visualizer.processing.multilayer_3d_ms_network import make_colormap
 from visualizer.processing.get_structure_data import get_mol_structure_2dsvg_base64
 
 logger = getLogger(__name__)

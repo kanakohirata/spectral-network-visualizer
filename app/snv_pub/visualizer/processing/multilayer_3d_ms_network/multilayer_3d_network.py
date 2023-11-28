@@ -1,276 +1,29 @@
 # TO DO
 #  "select_nodes_based_on_product_mz_required"
 #           currently only examine representative spec.
-import ast
 import copy
-import dask.dataframe as dd
-from django.core.cache import cache
 import glob
-from logging import getLogger
-import networkx as nx
 import os.path
-import pandas as pd
-import plotly.graph_objs as go
 import sys
 import zipfile
+from logging import getLogger
+import networkx as nx
+import pandas as pd
+import plotly.graph_objs as go
+from django.core.cache import cache
+
 from . import dedicated_dictionaries
 from . import feature_table_reader
 from . import multilayer_3d_mesh_functsions as m3d_mesh
 from . import multilayer_3d_rescale_functions as m3d_rescale
 from . import read_t3db_a1
 from . import suspect_compound
+from .my_parser.cluster_attribute_parser import read_cluster_attribute
+from .my_parser.compound_info_parser import add_external_cmpd_info
+from .my_parser.edge_info_parser import read_edge_info
 
 
 logger = getLogger(__name__)
-
-"""
-# version c does not use class 
-class Node_info:
-    def __init__(self):
-        self.total_input_idx ="none"
-        self.total_input_idx_mod = "none"
-        self.spec_cluster = spec_cluster_a1.Spec_cluster()
-        self.layer = ""
-        self.color = 0
-        # MODIFIED 20220714----------
-        self.suspect = ""
-        self.l_source_suspect =[]
-        self.name = ""
-        # -----------------MODIFIED 20220714
-
-
-"""
-"""
-# version c does not use class 
-class Edge_info:
-    def __init__(self):
-        #self.spec_cluster_x_id = 0
-        #self.spec_cluster_y_id = 0
-
-        self.spec_cluster_x_total_input_idx = 0
-        self.spec_cluster_y_total_input_idx = 0
-
-        self.spec_cluster_x_global_accession = ""
-        self.spec_cluster_y_global_accession = ""
-
-
-        self.delta_mz    =     0
-
-
-        self.spec_sim_score = 0
-        self.number_matched_peaks = 0
-
-        self.edge_type = ""
-
-        self.cmpd_sim_score = 0.0
-"""
-
-"""
-# version c does not use class 
-class Config_multilayer_3d:
-    def __init__(self):
-
-        self.filename_edge_info =""
-
-        self.filename_cluster_info = ""
-        self.filename_feature_table = ""
-        self.foldername_ext_cmpd_info = ""
-        self.foldername_spectra = ""
-
-        self.type_attribute_for_layer_separation = "source_filename"
-
-        self.filter_select_category = ""
-        self.filter_select_keyword = ""
-
-        self.type_attribute_for_layer_separation = ""
-        self.str_key_attribute_to_base_layer = ""
-        self.mesh_mode = 1
-
-        self.ref_filter_ext = "none"
-
-
-        # mass range -------------
-        self.mass_lower_limit = 0
-        self.mass_higher_limit = 0
-
-        # MODIFIED20220714------------
-        self.dic_filename_vs_dic_suspect_cmpd_vs_mz = {}
-        self.l_adduct_mass_for_suspect = []
-        self.list_filename_suspect_mz = []
-        self.list_mass_defect = []
-        self.list_product_mz_required =[]
-        self.mz_tol = 0.02
-        # ------------------MODIFIED20220714
-
-
-        self.subgraph_type = ""
-        self.subgraph_num_core_nodes = 99
-        self.subgraph_depth = 100
-
-        self.node_select_subgraph_mode = ""
-        self.node_select_subgraph_depth = 10000
-        #self.l_total_input_idx_for_node_select_subgraph = []
-        self.l_global_accession_for_node_select_subgraph =[]
-
-        self.quant_polar = ""
-
-        self.l_total_input_idx_to_remove = []
-
-
-        # threshold ----
-        self.score_threshold = 0.75
-        self.list_id_for_graphical_scoring_details = []
-
-"""
-
-
-def read_cluster_attribute(dic_config):
-    ###########################################################################################
-    # section D
-    # [D] read spec cluster info
-    ##########################################################################################
-
-    l_cluster_total_input_idx = []
-
-    # this dictionary is inted to hold whole input cluster info.
-    # cluster_total_input_idx is simply count of input cluster. NOT cluster id created by generator
-
-    dic_cluster_total_input_idx_vs_cluster_info = {}
-
-    """:type: list[Spec_cluster]"""
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  use conf_o
-    # df_clusterinfo = pd.read_csv(conf_o.filename_cluster_info, delimiter='\t', index_col=False)
-
-    df_clusterinfo = dd.read_csv(dic_config["filename_cluster_info"], sep='\t', dtype='object')
-
-    # first scan clusterinfo file just to collect cluster number.
-    count = -1
-    str_o = ""
-
-    f_present_RETENTION_TIME_IN_SEC = 0
-    for col in df_clusterinfo.columns:
-
-        logger.debug(col)
-        if col == "RETENTION_TIME_IN_SEC":
-            f_present_RETENTION_TIME_IN_SEC = 1
-            logger.debug("rt present")
-
-    for key, row in df_clusterinfo.iterrows():
-        valid_entry = 1
-        count += 1
-
-        l_cluster_total_input_idx.append(str(count))
-        ############################################
-        # make new object------------------------------
-
-        # obj_clst = spec_cluster_a1.Spec_cluster()
-        dic_clst = dedicated_dictionaries.get_initialized_dic_spec_cluster()
-
-        ############################################
-        # get info from the file-----------------
-        # print "IS THIS row['CLUSTER_ID']" , row['CLUSTER_ID']
-        dic_clst["cluster_id"] = row['CLUSTER_ID']
-
-        # !!!!!!!!!!!!!!!!!!!!!!!!!!1
-        # get rid of "  mark, which cause trouble later on in Dash interface.
-        str_global_accession = row['GLOBAL_ACCESSION']
-        dic_clst["compound_name"] = row['CMPD_NAME']
-        dic_clst["global_accession"] = str_global_accession.replace('"', '')
-
-        dic_clst["dataset"] = row['DATASET']
-        dic_clst["tag"] = row['DATASET']
-
-        dic_clst["list_compound_categories"] = []
-
-        if row['INCHI'] is not None:
-            dic_clst["inchi"] = row['INCHI']
-            # obj_clst.rdkit_mol = Chem.MolFromInchi(row['INCHI'])
-
-        if row['INCHI_KEY'] is not None:
-            dic_clst["inchi_key"] = str(row['INCHI_KEY'])
-
-        # o_sp_uni = spectrum_uni_a2.spectrum_uni_class()
-
-        dic_spec_uni = dedicated_dictionaries.get_initialized_dic_spec_uni()
-        dic_spec_uni["precursor_mz"] = float((row['PRECURSOR_MZ']))
-
-        if f_present_RETENTION_TIME_IN_SEC == 1:
-            if (row['RETENTION_TIME_IN_SEC'] != "None") and (row['RETENTION_TIME_IN_SEC'] is not "None"):
-                dic_spec_uni["retention_time_in_sec"] = float((row['RETENTION_TIME_IN_SEC']))
-
-        dic_spec_uni["accession_number"] = (row['ACCESSION_NUMBER'])
-
-        # peak list--------------
-        dic_spec_uni["peak_list_mz_int_rel"] = list(ast.literal_eval(row['PEAK_LIST_MZ_INT_REL']))
-
-        dic_spec_uni["list_cmpd_classification_kingdom"] = list(ast.literal_eval(row['CMPD_CLASSIFICATION_KINGDOM']))
-        dic_spec_uni["list_cmpd_classification_superclass"] = list(
-            ast.literal_eval(row['CMPD_CLASSIFICATION_SUPERCLASS']))
-        dic_spec_uni["list_cmpd_classification_class"] = list(ast.literal_eval(row['CMPD_CLASSIFICATION_CLASS']))
-        dic_spec_uni["source_filename"] = row['FILE_NAME']
-        dic_clst["represen_spec_uni"] = dic_spec_uni
-        dic_clst["list_spec_uni"] = []
-        # !!!!!!!!!not using ???
-
-        if valid_entry:
-            # list_cluster_info.append(obj_clst)
-            # note idx is now converted to str, because it will be modified for layer info later,
-            dic_cluster_total_input_idx_vs_cluster_info[str(count)] = dic_clst
-
-        str_o = str_o + "\n" + "cluster_total_input_idx:" + str(count) + "\tglobal accession:" + str(
-            dic_clst["global_accession"]) + "\tprecmz:" + str(dic_spec_uni["precursor_mz"]) + \
-                dic_spec_uni["source_filename"] + str(dic_spec_uni["list_cmpd_classification_kingdom"])
-
-    return dic_cluster_total_input_idx_vs_cluster_info
-
-
-def read_edge_info(dic_config):
-    ###########################################################################################
-    # section [H]
-    # [H] read EDGES info
-    ##########################################################################################
-    l_edges = []
-    list_edge_info = []
-    list_cluster_global_accession_to_pass_threshold = []
-    """:type: list[Edge_info]"""
-
-    # df_edge_info = pd.read_csv(conf_o.filename_edge_info, delimiter='\t', index_col=False)
-    df_edge_info = dd.read_csv(dic_config["filename_edge_info"], sep='\t', dtype='object', encoding='utf-8')
-    logger.debug("   --read_edge_info--  reading edgeinfo")
-
-    for key, row in df_edge_info.iterrows():
-        # obj_edge_info = edge_info_a1.Edge_info()
-        # obj_edge_info = Edge_info()
-        dic_edge_info = dedicated_dictionaries.get_initialized_dic_edge_info()
-        dic_edge_info["spec_cluster_x_id"] = row['X_CLUSTERID']
-        # obj_edge_info.spec_cluster_x_global_accession = row['REP_SPECTRUM_X_GLOBAL_ACCESSION']
-        x_global_accession = row['REP_SPECTRUM_X_GLOBAL_ACCESSION']
-        dic_edge_info["spec_cluster_x_global_accession"] = x_global_accession.replace('"', '')
-
-        dic_edge_info["spec_cluster_y_id"] = row['Y_CLUSTERID']
-        # obj_edge_info.spec_cluster_y_global_accession = row['REP_SPECTRUM_Y_GLOBAL_ACCESSION']
-        y_global_accession = row['REP_SPECTRUM_Y_GLOBAL_ACCESSION']
-        dic_edge_info["spec_cluster_y_global_accession"] = y_global_accession.replace('"', '')
-
-        l_edges.append((row['X_CLUSTERID'], row['Y_CLUSTERID']))
-
-        dic_edge_info["spec_sim_score"] = float(row['SCORE'])
-        dic_edge_info["delta_mz"] = float(row['DELTA_MZ'])
-
-        if (dic_edge_info["spec_sim_score"] > dic_config["score_threshold"]):
-            list_edge_info.append(dic_edge_info)
-            # list_cluster_global_accession_to_pass_threshold.append( dic_edge_info["spec_cluster_x_global_accession"] )
-            # list_cluster_global_accession_to_pass_threshold.append(dic_edge_info["spec_cluster_y_global_accession"])
-            # make it nr
-            # list_cluster_global_accession_to_pass_threshold = list(set(list_cluster_global_accession_to_pass_threshold))
-
-    logger.debug(" -- read_edge_info-- FINISHED reading edgeinfo")
-
-    # fo_log.write("\n[E] reading edge info\n")
-    # fo_log.write( "\nlen of list_cluster_global_accession_to_pass_threshold:\n" + str(len(list_cluster_global_accession_to_pass_threshold))  + "\n")
-    # fo_log.write("\nlen of list_edge_info:\n" + str(len(list_edge_info)) + "\n")
-
-    return l_edges, list_edge_info
 
 
 def add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluster_info):
@@ -282,216 +35,6 @@ def add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluste
         for input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
             if cluster_info['is_toxic']:
                 cluster_info['extra_node_color'] = '#00e08e'
-
-
-def read_external_cmpd_info(dic_config, dic_cluster_total_input_idx_vs_cluster_info):
-    logger.info(f'Start {sys._getframe().f_code.co_name}()')
-    fo = open("read_external_cmpd_info.txt", "w")
-    ###########################################
-    #  [F] Read external info for node/cluster
-    #############################################
-
-    #####################
-    # inchi key match mode    0: exact match ,  1:  XXXX-YYY-ZZZ match to XXXX-AAA-BBB
-    inchi_key_match_mode = 1
-
-    #########################
-    # external compound CLASSYFIRE classification file.
-    #############################
-
-    filename_ext_classyfire_compound_table = "visualizer/data/cmpd_classification_classyfire.tsv"
-
-    dic_inchikey_vs_dic_classyfire_classification = {}
-    dic_inchikey_1st_part_vs_dic_classyfire_classification = {}
-
-    df_ext_classyfire_cmpd_table = pd.read_csv(filename_ext_classyfire_compound_table, delimiter='\t', index_col=False)
-    df_ext_classyfire_cmpd_table = df_ext_classyfire_cmpd_table.fillna("no_classification")
-
-    path_t3db_xml = 'visualizer/data/t3db_xml/'  # TODO: Temporary T3DB XML directory
-    if not os.path.exists('./visualizer/data/t3db_xml/t3db.xml'):
-        with zipfile.ZipFile('./visualizer/data/t3db_xml/t3db.zip') as zf:
-            zf.extractall('./visualizer/data/t3db_xml')
-
-    list_t3db_inchikey_complete = []
-    list_t3db_inchikey_head = []
-
-    # Use cache of list_t3db_obj
-    list_t3db_obj = cache.get('list_t3db_obj')
-    if not list_t3db_obj:
-        list_t3db_obj = read_t3db_a1.read_t3db_a1_interparse(path_t3db_xml)
-        cache.set('list_t3db_obj', list_t3db_obj, 60 * 10)
-    
-    for t3db_obj in list_t3db_obj:
-        list_t3db_inchikey_complete.append(t3db_obj.inchi_key)
-        list_t3db_inchikey_head.append(t3db_obj.inchi_key.split('-')[0])
-
-    count = -1
-    for key, row in df_ext_classyfire_cmpd_table.iterrows():
-        valid_entry = 1
-        count += 1
-        inchi_key = row['INCHI_KEY']
-
-        # l_cluster_total_input_idx.append(str(count))
-
-        ############################################
-        # make new entry------------------------------
-        dic_for_entry = {}
-        # obj_clst = spec_cluster_a1.Spec_cluster()
-
-        ############################################
-        # get info from the file-----------------
-        dic_for_entry['CMPD_CLASSIFICATION_KINGDOM'] = [row['CMPD_CLASSIFICATION_KINGDOM']]
-        dic_for_entry['CMPD_CLASSIFICATION_SUPERCLASS'] = [row['CMPD_CLASSIFICATION_SUPERCLASS']]
-        dic_for_entry['CMPD_CLASSIFICATION_CLASS'] = [row['CMPD_CLASSIFICATION_CLASS']]
-        dic_for_entry['CMPD_CLASSIFICATION_SUBCLASS'] = [row['CMPD_CLASSIFICATION_SUBCLASS']]
-
-        dic_inchikey_vs_dic_classyfire_classification[inchi_key] = dic_for_entry
-
-        dic_inchikey_1st_part_vs_dic_classyfire_classification[inchi_key.split("-")[0]] = dic_for_entry
-
-    logger.debug("  ---read_external_cmpd_info---- finished reading external CLASS file")
-
-    fo_noclass = open("noclass_inchikey_inchi.txt", "w")
-
-
-    # complement classification info for input clusters.
-    # iterate cluster/node
-    for input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-
-        # print "#", input_idx, cluster_info.inchi_key
-        # if the current cluster (actually its represen uni) does not have superclass info
-        l_tag_noclassification = ['noclassification', 'no_classification', 'NO_CLASSIFICATION']
-
-        # do this only for spec cluster whose identity and inchi key is known
-        if len(cluster_info["inchi_key"]) > 4:
-            # if the spectrum has classification info
-            if len(cluster_info["represen_spec_uni"]["list_cmpd_classification_superclass"]) > 0:
-                if cluster_info["represen_spec_uni"]["list_cmpd_classification_superclass"][0] in l_tag_noclassification:
-                    # print cluster_info.inchi_key, "class info lacks", cluster_info.represen_spec_uni.list_cmpd_classification_superclass
-                    dic_classyfire_classification = {}
-
-                    # inchi key match mode : 1  only match 1st part of inchikey
-                    if inchi_key_match_mode == 1:
-                        # if inchikey is present in the dictionary of external info.
-                        if cluster_info["inchi_key"].split("-")[0] in dic_inchikey_1st_part_vs_dic_classyfire_classification:
-                            dic_classyfire_classification = dic_inchikey_1st_part_vs_dic_classyfire_classification[
-                                cluster_info["inchi_key"].split("-")[0]]
-                            # print "dic_classyfire_classification", dic_classyfire_classification
-                            cluster_info["represen_spec_uni"]["list_cmpd_classification_kingdom"] = \
-                                dic_classyfire_classification['CMPD_CLASSIFICATION_KINGDOM']
-                            cluster_info["represen_spec_uni"]["list_cmpd_classification_superclass"] = \
-                                dic_classyfire_classification['CMPD_CLASSIFICATION_SUPERCLASS']
-                            cluster_info["represen_spec_uni"]["list_cmpd_classification_class"] = \
-                                dic_classyfire_classification['CMPD_CLASSIFICATION_CLASS']
-                            cluster_info["represen_spec_uni"]["list_cmpd_classification_subclass"] = \
-                                dic_classyfire_classification['CMPD_CLASSIFICATION_SUBCLASS']
-
-                        if cluster_info["inchi_key"].split("-")[0] in list_t3db_inchikey_head:
-                            cluster_info['is_toxic'] = True
-
-                        else:
-                            fo_noclass.write(cluster_info["inchi_key"] + "\t" + cluster_info["inchi"] + "\n")
-                            logger.info(f'No classification data: {cluster_info["inchi_key"]}, {cluster_info["inchi"]}')
-
-                    else:
-                        if cluster_info["inchi_key"] in list_t3db_inchikey_complete:
-                            cluster_info['is_toxic'] = True
-
-                    # print "complemented sperclass", cluster_info.represen_spec_uni.list_cmpd_classification_superclass
-                """
-                for t3db_obj in list_t3db_obj:
-                    f_match = 0
-                    if inchi_key_match_mode == 0 :
-                        if cluster_info.inchi_key == t3db_obj.inchi_key:
-                """
-
-    fo_noclass.close()
-
-    path = dic_config["foldername_ext_cmpd_info"]
-
-    ##############################
-    # NON T3DB mode
-    if path != "t3db_xml":
-        # list_t3db_obj = read_t3db_a1.read_t3db_a1_interparse(path)
-
-        # key is inchikey and value is dictionary where all external compound info is stored. key is header. value is value specified in tsv
-        dic_inchikey_vs_dic_external_compound_info = {}
-
-        for file in glob.glob(path + '\*.tsv'):
-
-            df_ext_compound_table = pd.read_csv(file, delimiter='\t', index_col=False)
-            # df_ext_classyfire_cmpd_table = df_ext_classyfire_cmpd_table.fillna("no_classification")
-            count = -1
-            for key, row in df_ext_compound_table.iterrows():
-                valid_entry = 1
-                count += 1
-                inchi_key = row['INCHI_KEY']
-                skin_reactivity = row['SKIN_REACT']
-
-                if not inchi_key in dic_inchikey_vs_dic_external_compound_info:
-                    dic_inchikey_vs_dic_external_compound_info[inchi_key] = {}
-                    dic_inchikey_vs_dic_external_compound_info[inchi_key]['SKIN_REACT'] = skin_reactivity
-
-                if inchi_key in dic_inchikey_vs_dic_external_compound_info:
-                    dic_inchikey_vs_dic_external_compound_info[inchi_key]['SKIN_REACT'] = skin_reactivity
-
-        for input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-            l_compound_category_for_this_node = []
-
-            # cluster_info.inchi_key
-
-            for inchikey_ext, dic_external_compound_info in dic_inchikey_vs_dic_external_compound_info.items():
-
-                f_match = 0
-                if inchi_key_match_mode == 0:
-                    if cluster_info.inchi_key == inchikey_ext:
-                        f_match = 1
-
-                if inchi_key_match_mode == 1:
-                    if cluster_info.inchi_key.split("-")[0] == inchikey_ext.split("-")[0]:
-                        f_match = 1
-
-                if f_match == 1:
-                    # count_t3db_found_compounds = count_t3db_found_compounds + 1
-
-                    for k, v in dic_external_compound_info.items():
-                        # l_toxin_category_for_this_node = l_toxin_category_for_this_node + t3db_obj.list_categories
-                        l_compound_category_for_this_node.append(k)
-            cluster_info["list_compound_categories"] = list(set(l_compound_category_for_this_node))
-
-    ##############################
-    # T3DB mode
-    if path.endswith("t3db_xml/"):  # TODO: if path == "t3db_xml" -> if path.endswith("t3db_xml")
-        # list_t3db_obj = read_t3db_a1.read_t3db_a1_interparse(path)
-
-        fo.write("length of list_t3db_obj )" + str(len(list_t3db_obj)))
-        logger.info(f'Length of list_t3db_obj: {len(list_t3db_obj)}')
-
-        # iterate cluster/node
-        count_t3db_found_compounds = 0
-        for input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-            l_toxin_category_for_this_node = []
-            for t3db_obj in list_t3db_obj:
-                f_match = 0
-                if inchi_key_match_mode == 0:
-                    if cluster_info['inchi_key'] == t3db_obj.inchi_key:
-                        f_match = 1
-
-                if inchi_key_match_mode == 1:
-                    if cluster_info['inchi_key'].split("-")[0] == t3db_obj.inchi_key.split("-")[0]:
-                        f_match = 1
-
-                if f_match == 1:
-                    count_t3db_found_compounds = count_t3db_found_compounds + 1
-                    l_toxin_category_for_this_node = l_toxin_category_for_this_node + t3db_obj.list_categories
-
-            cluster_info['list_compound_categories'] = list(set(l_toxin_category_for_this_node))
-
-        fo.write("count_t3db_found_compounds )" + str(count_t3db_found_compounds))
-        logger.warning(f'count_t3db_found_compounds: {count_t3db_found_compounds}')
-        fo.flush()
-
-    logger.debug("--read_external_cmpd_info--  finished")
 
 
 def read_feature_table(config_o):
@@ -762,7 +305,7 @@ def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_
         l_total_input_idx_mod_for_this_node = []
         for layer_name in list_layer_name:
             # print total_input_idx  , ":", layer_name
-            total_input_idx_mod = total_input_idx + "|" + layer_name
+            total_input_idx_mod = f'{total_input_idx}|{layer_name}'
 
             l_total_input_idx_mod_for_this_node.append(total_input_idx_mod)
             # print "total_input_idx_mod" , total_input_idx_mod
@@ -2273,7 +1816,7 @@ def create_data_for_3d_visualization(dic_processed_data, conf):
 
 
 def read_data_for_multilayer_3d_network(dic_config):
-    ###################3
+    ###################
     # read config
     logger.info(f'Start {sys._getframe().f_code.co_name}()')
     logger.debug("[C]reading cluster attribute")
@@ -2282,12 +1825,22 @@ def read_data_for_multilayer_3d_network(dic_config):
 
     #####################
     # read input data
+
+    ##########################################################################################
+    # section D
+    # [D] read spec cluster info
+    ##########################################################################################
     logger.debug("* main [D]reading cluster attribute")
-    dic_cluster_total_input_idx_vs_cluster_info = read_cluster_attribute(dic_config)
+    dic_cluster_total_input_idx_vs_cluster_info = read_cluster_attribute(dic_config['filename_cluster_info'])
+
     # reading external info
+    ###########################################
+    # [F] Read external info for node/cluster
+    ###########################################
     logger.warning("* main [D]reading external compound info")
-    read_external_cmpd_info(dic_config, dic_cluster_total_input_idx_vs_cluster_info)
+    add_external_cmpd_info(dic_cluster_total_input_idx_vs_cluster_info, dic_config['foldername_ext_cmpd_info'])
     logger.warning("* main [D]finished reading external compound info")
+
     # Add color to T3DB compounds
     add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluster_info)
     # make original copy
@@ -2296,9 +1849,11 @@ def read_data_for_multilayer_3d_network(dic_config):
     logger.warning(f"* main[D]len dic_cluster_total_input_idx_vs_cluster_info "
                    f"{len(dic_cluster_total_input_idx_vs_cluster_info)}")
 
-    logger.debug("reading edge info")
-
-    l_edges, list_edge_info = read_edge_info(dic_config)
+    ##########################################################################################
+    # section [H]
+    # [H] read EDGES info
+    ##########################################################################################
+    l_edges, list_edge_info = read_edge_info(dic_config['filename_edge_info'], dic_config['score_threshold'])
 
     fo_log.write("\n\n[F1]   list_edge_info_original")
     log_message = f'[F1]   list_edge_info_original' \
