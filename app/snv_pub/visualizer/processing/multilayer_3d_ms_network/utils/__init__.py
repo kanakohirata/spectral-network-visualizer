@@ -1,0 +1,1 @@
+from .add_color_to_t3db_compound import *
