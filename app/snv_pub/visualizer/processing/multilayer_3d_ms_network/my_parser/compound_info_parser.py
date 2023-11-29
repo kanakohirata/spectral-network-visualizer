@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import sys
 import zipfile
-from .. import read_t3db_a1
+from . import t3db_parser
 
 logger = getLogger(__name__)
 
@@ -268,13 +268,25 @@ def _read_t3db_xml():
     # Use cache of list_t3db_obj
     list_t3db_obj = cache.get('list_t3db_obj')
     if not list_t3db_obj:
-        list_t3db_obj = read_t3db_a1.read_t3db_a1_interparse(path_t3db_xml)
+        list_t3db_obj = t3db_parser.read_t3db_xml_files(path_t3db_xml)
         cache.set('list_t3db_obj', list_t3db_obj, 60 * 10)
 
     for t3db_obj in list_t3db_obj:
-        # TODO: Check duplicated inchikeys
-        dic_inchikey_vs_t3db_obj[t3db_obj.inchi_key] = t3db_obj
-        dic_inchikey_1st_part_vs_t3db_obj[t3db_obj.inchi_key.split('-')[0]] = t3db_obj
+        inchi_key_head = t3db_obj.inchi_key.split('-')[0]
+        # Keep all categories because some records have the same InChIKey but different categories.
+        if t3db_obj.inchi_key in dic_inchikey_vs_t3db_obj:
+            _list_categories = list(set(dic_inchikey_vs_t3db_obj[t3db_obj.inchi_key].list_categories
+                                        + t3db_obj.list_categories))
+            dic_inchikey_vs_t3db_obj[t3db_obj.inchi_key].list_categories = _list_categories
+        else:
+            dic_inchikey_vs_t3db_obj[t3db_obj.inchi_key] = t3db_obj
+
+        if inchi_key_head in dic_inchikey_1st_part_vs_t3db_obj:
+            _list_categories = list(set(dic_inchikey_1st_part_vs_t3db_obj[inchi_key_head].list_categories
+                                        + t3db_obj.list_categories))
+            dic_inchikey_1st_part_vs_t3db_obj[inchi_key_head].list_categories = _list_categories
+        else:
+            dic_inchikey_1st_part_vs_t3db_obj[inchi_key_head] = t3db_obj
 
     return dic_inchikey_vs_t3db_obj, dic_inchikey_1st_part_vs_t3db_obj
 
