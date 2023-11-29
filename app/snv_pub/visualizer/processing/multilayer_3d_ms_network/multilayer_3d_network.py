@@ -21,70 +21,11 @@ from . import suspect_compound
 from .my_parser.cluster_attribute_parser import read_cluster_attribute
 from .my_parser.compound_info_parser import add_external_cmpd_info
 from .my_parser.edge_info_parser import read_edge_info
+from .my_parser.feature_table_parser import read_feature_table
+from .utils import add_color_to_t3db_compound
 
 
 logger = getLogger(__name__)
-
-
-def add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluster_info):
-    logger.info(f'Start {sys._getframe().f_code.co_name}()')
-    if not dic_config['color_toxic_compound']:
-        for input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-            cluster_info['extra_node_color'] = ''
-    else:
-        for input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-            if cluster_info['is_toxic']:
-                cluster_info['extra_node_color'] = '#00e08e'
-
-
-def read_feature_table(config_o):
-    #########################
-    #############################
-    # [J] read feature table
-    #############################
-    ################################
-    logger.debug("[F] reading feature table")
-    # ratio_x_name = inifile.get("quant","ratio_x_name")
-    # ratio_y_name = inifile.get("quant","ratio_y_name")
-
-    feature_table_mode = 1
-
-    # key is global accession  balue is dictionary "mf"     mf.global_accession  mf.value_to_show   mf.stat_val
-    dic_global_accession_vs_mass_feature = {}
-
-    # if feature table is not present.
-    if len(config_o["filename_feature_table"]) < 3:
-        logger.debug(f"no feature table specified in config {config_o['filename_feature_table']}")
-
-        feature_table_mode = -1
-
-    # if feature table is not present.
-    if feature_table_mode == -1:
-        logger.debug("no feature table provided")
-        dic_global_accession_vs_mass_feature = {}
-
-    if feature_table_mode == 0:
-        dic_global_accession_vs_mass_feature = feature_table_reader.feature_table_reader_mzmine(
-            config_o["filename_feature_table"])
-        feature_table_reader.get_ratio(dic_global_accession_vs_mass_feature,
-                                       [config_o["ratio_x_name"], config_o["ratio_y_name"]])
-
-    if feature_table_mode == 1:
-        # node dic 's key is global accession now. ( title|sourcefile)
-        logger.debug("no feature table mode == 1")
-        dic_global_accession_vs_mass_feature = feature_table_reader.feature_table_reader_quant_res(
-            config_o["filename_feature_table"])
-
-    str_o = "feature===\n"
-    for k, v in dic_global_accession_vs_mass_feature.items():
-        str_o = str_o + str(k) + "\t" + str(v['value_to_show']) + "\n"
-
-    """
-    for k,v in dic_global_accession_vs_mass_feature.items():
-        print(k,v.value_to_show, v.stat_val)
-    """
-
-    return dic_global_accession_vs_mass_feature
 
 
 def select_nodes_for_subgraph(conf_o):
@@ -121,29 +62,24 @@ def select_nodes_for_subgraph(conf_o):
         # print  "l_global_accession_for_subgraph" ,l_global_accession_for_subgraph
 
 
-def select_nodes_based_on_keyword(dic_config, dic_cluster_total_input_idx_vs_cluster_info):
+def select_nodes_based_on_keyword(filter_select_category, filter_select_keyword, dic_cluster_total_input_idx_vs_cluster_info):
     # select specific node .
-    logger.debug("[G2] select specific node/cluster")
-    logger.warning(f'dic_config["filter_select_category"]: {dic_config["filter_select_category"]}')
-    if (dic_config["filter_select_category"] == "none"
-            or dic_config["filter_select_category"] == 'list_compound_categories'  # TODO: categories -> toxicity ?
-            or len(dic_config["filter_select_category"]) < 2):
-        logger.debug(" no keyword selected for node selection")
-        return dic_cluster_total_input_idx_vs_cluster_info
+    logger.debug('[G2] select specific node/cluster')
+    logger.debug(f'dic_config["filter_select_category"]: {filter_select_category}')
 
-    if dic_config["filter_select_category"] != "none":
+    if filter_select_category == 'list_cmpd_classification_superclass':
         dic_cluster_total_input_idx_vs_cluster_info_new = {}
 
         for total_input_idx, cl_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-            if dic_config["filter_select_category"] == "list_cmpd_classification_superclass":
-                # if the current culter is sample OR to be selected.
-                if (cl_info["tag"] == "sample"
-                        or dic_config["filter_select_keyword"] in cl_info["represen_spec_uni"]["list_cmpd_classification_superclass"]):
-                    dic_cluster_total_input_idx_vs_cluster_info_new[total_input_idx] = cl_info
-
-        # dic_cluster_total_input_idx_vs_cluster_info = dic_cluster_total_input_idx_vs_cluster_info_new
+            # if the current cluster is sample OR to be selected.
+            if (cl_info['tag'] == 'sample'
+                    or filter_select_keyword in cl_info['represen_spec_uni']['list_cmpd_classification_superclass']):
+                dic_cluster_total_input_idx_vs_cluster_info_new[total_input_idx] = cl_info
 
         return dic_cluster_total_input_idx_vs_cluster_info_new
+
+    else:
+        return dic_cluster_total_input_idx_vs_cluster_info
 
 
 def select_nodes_based_on_prec_mz(conf_o, dic_cluster_total_input_idx_vs_cluster_info):
@@ -1842,7 +1778,8 @@ def read_data_for_multilayer_3d_network(dic_config):
     logger.warning("* main [D]finished reading external compound info")
 
     # Add color to T3DB compounds
-    add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluster_info)
+    add_color_to_t3db_compound(dic_config['color_toxic_compound'], dic_cluster_total_input_idx_vs_cluster_info)
+
     # make original copy
     dic_cluster_total_input_idx_vs_cluster_info_original = copy.deepcopy(dic_cluster_total_input_idx_vs_cluster_info)
 
@@ -1864,23 +1801,23 @@ def read_data_for_multilayer_3d_network(dic_config):
 
     logger.info(log_message)
 
-    # l_edges_original = copy.deepcopy(l_edges)
-    # list_edge_info_original = copy.deepcopy(list_edge_info)
-
-    # for k, v in dic_config["dic_filename_vs_dic_suspect_cmpd_vs_mz"].items() :
-    #    fo_log.write( "\nsuspect filename:"  +  k      )
-
+    #############################
+    # [J] read feature table
+    #############################
+    logger.debug("[J] reading feature table")
     #  --------------MODIFIED20220714
     # read_feature table.
-    logger.debug("Main [D]reading cluster attribute")
+    # TODO: Check feature_table_parser
     dic_global_accession_vs_mass_feature_original = read_feature_table(dic_config)
     dic_global_accession_vs_mass_feature = read_feature_table(dic_config)
 
     # select nodes based on keyword
-    dic_cluster_total_input_idx_vs_cluster_info_new = select_nodes_based_on_keyword(dic_config,
-                                                                                    dic_cluster_total_input_idx_vs_cluster_info)
-    logger.warning(f" selecte nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info_new "
-                 f"{len(dic_cluster_total_input_idx_vs_cluster_info_new)}")
+    dic_cluster_total_input_idx_vs_cluster_info_new =\
+        select_nodes_based_on_keyword(dic_config['filter_select_category'],
+                                      dic_config['filter_select_keyword'],
+                                      dic_cluster_total_input_idx_vs_cluster_info)
+    logger.warning(f"select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info_new "
+                   f"{len(dic_cluster_total_input_idx_vs_cluster_info_new)}")
 
     # take over
     dic_cluster_total_input_idx_vs_cluster_info = dic_cluster_total_input_idx_vs_cluster_info_new
@@ -1947,8 +1884,10 @@ def process_3d_network_data(dic_source_data, dic_config):
     add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluster_info_original)
 
     # select nodes based on keyword
-    dic_cluster_total_input_idx_vs_cluster_info_new = select_nodes_based_on_keyword(dic_config,
-                                                                                    dic_cluster_total_input_idx_vs_cluster_info_original)
+    dic_cluster_total_input_idx_vs_cluster_info_new =\
+        select_nodes_based_on_keyword(dic_config['filter_select_category'],
+                                      dic_config['filter_select_keyword'],
+                                      dic_cluster_total_input_idx_vs_cluster_info_original)
     logger.debug(f"\n selecte nodes based on keyword : len ddic_cluster_total_input_idx_vs_cluster_info_new: {str(len(dic_cluster_total_input_idx_vs_cluster_info_new))}")
 
     #  [C2]
