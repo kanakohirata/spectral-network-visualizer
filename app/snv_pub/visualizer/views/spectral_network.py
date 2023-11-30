@@ -272,6 +272,7 @@ class GetNetworkData(generic.TemplateView):
         # logger.debug(f"l_total_input_idx_to_remove: {config['l_total_input_idx_to_remove']}")
 
         # Create or Update
+        dic_source_data = None
         if create_or_update == 'update':
             logger.debug('Use session data.')
             dic_source_data = request.session['dic_source_data']
@@ -281,6 +282,10 @@ class GetNetworkData(generic.TemplateView):
                 create_or_update = 'create'
 
         if create_or_update == 'create':
+            dic_source_data = multilayer_3d_network.read_data_for_multilayer_3d_network(config)
+            request.session['dic_source_data'] = dic_source_data
+
+        if not dic_source_data:
             dic_source_data = multilayer_3d_network.read_data_for_multilayer_3d_network(config)
             request.session['dic_source_data'] = dic_source_data
 

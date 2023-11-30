@@ -1773,10 +1773,10 @@ def create_data_for_3d_visualization(dic_processed_data, conf):
 def read_data_for_multilayer_3d_network(dic_config):
     ###################
     # read config
-    logger.info(f'Start {sys._getframe().f_code.co_name}()')
-    logger.debug("[C]reading cluster attribute")
+    logger.info('Start read_data_for_multilayer_3d_network()')
+    logger.debug('[C]reading cluster attribute')
 
-    fo_log = open("log_read_data_for_multilayer_3d_network.txt", "w")
+    fo_log = open('log_read_data_for_multilayer_3d_network.txt', "w")
 
     #####################
     # read input data
@@ -1785,16 +1785,16 @@ def read_data_for_multilayer_3d_network(dic_config):
     # section D
     # [D] read spec cluster info
     ##########################################################################################
-    logger.debug("* main [D]reading cluster attribute")
+    logger.debug('* main [D]reading cluster attribute')
     dic_cluster_total_input_idx_vs_cluster_info = read_cluster_attribute(dic_config['filename_cluster_info'])
 
     # reading external info
     ###########################################
     # [F] Read external info for node/cluster
     ###########################################
-    logger.warning("* main [D]reading external compound info")
+    logger.warning('* main [D]reading external compound info')
     add_external_cmpd_info(dic_cluster_total_input_idx_vs_cluster_info, dic_config['foldername_ext_cmpd_info'])
-    logger.warning("* main [D]finished reading external compound info")
+    logger.warning('* main [D]finished reading external compound info')
 
     # Add color to T3DB compounds
     add_color_to_t3db_compound(dic_config['color_toxic_compound'], dic_cluster_total_input_idx_vs_cluster_info)
@@ -1802,8 +1802,8 @@ def read_data_for_multilayer_3d_network(dic_config):
     # make original copy
     dic_cluster_total_input_idx_vs_cluster_info_original = copy.deepcopy(dic_cluster_total_input_idx_vs_cluster_info)
 
-    logger.warning(f"* main[D]len dic_cluster_total_input_idx_vs_cluster_info "
-                   f"{len(dic_cluster_total_input_idx_vs_cluster_info)}")
+    logger.warning(f'* main[D]len dic_cluster_total_input_idx_vs_cluster_info '
+                   f'{len(dic_cluster_total_input_idx_vs_cluster_info)}')
 
     ##########################################################################################
     # section [H]
@@ -1811,11 +1811,11 @@ def read_data_for_multilayer_3d_network(dic_config):
     ##########################################################################################
     l_edges, list_edge_info = read_edge_info(dic_config['filename_edge_info'], dic_config['score_threshold'])
 
-    fo_log.write("\n\n[F1]   list_edge_info_original")
+    fo_log.write('\n\n[F1]   list_edge_info_original')
     log_message = f'[F1]   list_edge_info_original' \
                   f'\nspec_cluster_x_global_accession <-> spec_cluster_y_global_accession'
     for e in list_edge_info:
-        fo_log.write("\n" + e["spec_cluster_x_global_accession"] + " <-> " + e["spec_cluster_y_global_accession"])
+        fo_log.write(f'\n{e["spec_cluster_x_global_accession"]} <-> {e["spec_cluster_y_global_accession"]}')
         log_message += f'\n{e["spec_cluster_x_global_accession"]} <-> {e["spec_cluster_y_global_accession"]}'
 
     logger.info(log_message)
@@ -1823,7 +1823,7 @@ def read_data_for_multilayer_3d_network(dic_config):
     #############################
     # [J] read feature table
     #############################
-    logger.debug("[J] reading feature table")
+    logger.debug('[J] reading feature table')
     #  --------------MODIFIED20220714
     # read_feature table.
     # TODO: Check feature_table_parser
@@ -1831,40 +1831,38 @@ def read_data_for_multilayer_3d_network(dic_config):
     dic_global_accession_vs_mass_feature = read_feature_table(dic_config)
 
     # select nodes based on keyword
-    dic_cluster_total_input_idx_vs_cluster_info_new =\
+    dic_cluster_total_input_idx_vs_cluster_info =\
         select_nodes_based_on_keyword(dic_config['filter_select_category'],
                                       dic_config['filter_select_keyword'],
                                       dic_cluster_total_input_idx_vs_cluster_info)
-    logger.warning(f"select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info_new "
-                   f"{len(dic_cluster_total_input_idx_vs_cluster_info_new)}")
+    logger.debug(f'select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info '
+                 f'{len(dic_cluster_total_input_idx_vs_cluster_info)}')
 
-    # take over
-    dic_cluster_total_input_idx_vs_cluster_info = dic_cluster_total_input_idx_vs_cluster_info_new
     logger.debug(
-        f"len dic_cluster_total_input_idx_vs_cluster_info: {str(len(dic_cluster_total_input_idx_vs_cluster_info))}")
+        f'len dic_cluster_total_input_idx_vs_cluster_info: {str(len(dic_cluster_total_input_idx_vs_cluster_info))}')
 
     # locate nodes to layers
-    dic_cluster_total_input_idx_MOD_vs_node_info, list_edge_info, dic_cluster_id_vs_l_cluster_total_input_idx_MOD = \
+    _, list_edge_info, _ = \
         locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_idx_vs_cluster_info, list_edge_info)
 
-    logger.debug("returned from  locate_nodes_to_layers_and_update_edges")
+    logger.debug('returned from  locate_nodes_to_layers_and_update_edges')
 
     # make list_of_edges_for_networkx
-    logger.debug("Main  [make list_of_edges_for_networkx]")
+    logger.debug('Main  [make list_of_edges_for_networkx]')
     list_of_edge_for_networkx = make_list_of_edge_for_networkx(list_edge_info)
-    list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config['score_threshold'],
+    _, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config['score_threshold'],
                                                                                           list_of_edge_for_networkx)
 
-    dic_source_data = {}
-    dic_source_data["dic_config"] = dic_config
-    dic_source_data["list_edge_info"] = list_edge_info
-    dic_source_data[
-        "dic_cluster_total_input_idx_vs_cluster_info_original"] = dic_cluster_total_input_idx_vs_cluster_info_original
-    dic_source_data["list_of_edge_for_networkx"] = list_of_edge_for_networkx
-    dic_source_data["list_node_total_input_idx_mod_in_use"] = list_node_total_input_idx_mod_in_use
-    dic_source_data["dic_cluster_total_input_idx_vs_cluster_info"] = dic_cluster_total_input_idx_vs_cluster_info
-    dic_source_data["dic_global_accession_vs_mass_feature_original"] = dic_global_accession_vs_mass_feature_original
-    dic_source_data["dic_global_accession_vs_mass_feature"] = dic_global_accession_vs_mass_feature
+    dic_source_data = {
+        'dic_config': dic_config,
+        'list_edge_info': list_edge_info,
+        'dic_cluster_total_input_idx_vs_cluster_info_original': dic_cluster_total_input_idx_vs_cluster_info_original,
+        'dic_cluster_total_input_idx_vs_cluster_info': dic_cluster_total_input_idx_vs_cluster_info,
+        'list_of_edge_for_networkx': list_of_edge_for_networkx,
+        'list_node_total_input_idx_mod_in_use': list_node_total_input_idx_mod_in_use,
+        'dic_global_accession_vs_mass_feature_original': dic_global_accession_vs_mass_feature_original,
+        'dic_global_accession_vs_mass_feature': dic_global_accession_vs_mass_feature
+    }
 
     fo_log.close()
     return dic_source_data
@@ -1900,7 +1898,7 @@ def process_3d_network_data(dic_source_data, dic_config):
                 f'{len(dic_cluster_total_input_idx_vs_cluster_info_original)}')
 
     # Add color to T3DB compounds
-    add_color_to_t3db_compound(dic_config, dic_cluster_total_input_idx_vs_cluster_info_original)
+    add_color_to_t3db_compound(dic_config['color_toxic_compound'], dic_cluster_total_input_idx_vs_cluster_info_original)
 
     # select nodes based on keyword
     dic_cluster_total_input_idx_vs_cluster_info_new =\
