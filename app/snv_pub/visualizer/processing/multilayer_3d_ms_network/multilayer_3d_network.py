@@ -209,7 +209,7 @@ def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_
         [
             {'spec_cluster_x_total_input_idx': '0|sample_aaa.mps', 'spec_cluster_y_total_input_idx': '1|sample_aaa.mps', 'spec_sim_score': 0.9, 'edge_type': 'inner_sample_layer'},
             {'spec_cluster_x_total_input_idx': '0|sample_aaa.mps', 'spec_cluster_y_total_input_idx': '2|Benzenoids', 'spec_sim_score': 0.8, 'edge_type': 'inter_sample_ref_layer'},
-            {'spec_cluster_x_total_input_idx': '2|Benzenoids', 'spec_cluster_y_total_input_idx': '3|Benzenoids', 'spec_sim_score': 0.9, 'edge_type': 'inner_ref_layer'}
+            {'spec_cluster_x_total_input_idx': '2|Benzenoids', 'spec_cluster_y_total_input_idx': '3|Benzenoids', 'spec_sim_score': 0.9, 'edge_type': 'inner_ref_layer'}, ...
         ]
     dic_cluster_id_vs_l_cluster_total_input_idx_MOD : dict
 
@@ -217,7 +217,7 @@ def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_
             0 : ['0|sample_aaa.mps'],
             1: ['1|sample_aaa.mps'],
             2: ['2|Benzenoids'],
-            3: ['3|Benzenoids'],
+            3: ['3|Benzenoids'], ...
         }
     """
     ######################################################
@@ -404,23 +404,37 @@ def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_
 #############################
 #  [P] Create a network using networkX
 #############################
-def make_list_of_edge_for_networkx(dic_config, list_edge_info):
-    # print "[G] Create a network using networkX "
+def make_list_of_edge_for_networkx(list_edge_info):
+    """
+    Parameters
+    ----------
+    list_edge_info
 
+    Returns
+    -------
+    list_of_edge_for_networkx : list
+        A list of lists which have 'spec_cluster_x_total_input_idx' at 0th, 'spec_cluster_y_total_input_idx' at 1st and
+        a dictionary of 'spec_sim_score', 'delta_mz' and 'edge_type' at 2nd.
+
+        [
+            ['0|sample_aaa.msp', '1|sample_aaa.msp', {'spec_sim_score': 0.9, 'delta_mz': 0.01, 'edge_type': 'inner_sample_layer'}],
+            ['0|sample_aaa.msp', '2|Benzenoids', {'spec_sim_score': 0.8, 'delta_mz': 0.02, 'edge_type': 'inter_sample_ref_layer'}],
+            ['2|Benzenoids', '3|Benzenoids', {'spec_sim_score': 0.9, 'delta_mz': 0.01, 'edge_type': 'inner_ref_layer'}], ...
+        ]
+    """
     list_of_edge_for_networkx = []
-    ##########
     for edge_o in list_edge_info:
+        if edge_o['edge_type'] in ['inner_ref_layer', 'inner_sample_layer',
+                                   'inter_sample_ref_layer', 'inter_sample_layer']:
 
-        if edge_o["edge_type"] in ["inner_ref_layer", "inner_sample_layer", "inter_sample_ref_layer",
-                                   "inter_sample_layer"]:
-            list_for_one_node = [0] * 3
             # make list corresponds the info of one node.
-            list_for_one_node[0] = edge_o["spec_cluster_x_total_input_idx"]
-            list_for_one_node[1] = edge_o["spec_cluster_y_total_input_idx"]
-
-            dict_info = {'spec_sim_score': edge_o["spec_sim_score"], 'delta_mz': edge_o["delta_mz"],
-                         "edge_type": edge_o["edge_type"]}
-            list_for_one_node[2] = dict_info
+            list_for_one_node = [
+                edge_o['spec_cluster_x_total_input_idx'],
+                edge_o['spec_cluster_y_total_input_idx'],
+                {'spec_sim_score': edge_o['spec_sim_score'],
+                 'delta_mz': edge_o['delta_mz'],
+                 'edge_type': edge_o['edge_type']}
+            ]
 
             list_of_edge_for_networkx.append(list_for_one_node)
 
@@ -1850,8 +1864,8 @@ def read_data_for_multilayer_3d_network(dic_config):
         locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_idx_vs_cluster_info, list_edge_info)
 
     logger.debug("returned from  locate_nodes_to_layers_and_update_edges")
-    # make list_of_edges_for_networkx
 
+    # make list_of_edges_for_networkx
     logger.debug("Main  [make list_of_edges_for_networkx]")
     list_of_edge_for_networkx = make_list_of_edge_for_networkx(dic_config, list_edge_info)
     list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config,
