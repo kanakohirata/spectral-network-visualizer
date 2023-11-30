@@ -1867,7 +1867,7 @@ def read_data_for_multilayer_3d_network(dic_config):
 
     # make list_of_edges_for_networkx
     logger.debug("Main  [make list_of_edges_for_networkx]")
-    list_of_edge_for_networkx = make_list_of_edge_for_networkx(dic_config, list_edge_info)
+    list_of_edge_for_networkx = make_list_of_edge_for_networkx(list_edge_info)
     list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config,
                                                                                           list_of_edge_for_networkx)
 
@@ -2044,7 +2044,7 @@ def process_3d_network_data(dic_source_data, dic_config):
     logger.info(log_message)
 
     # what you get is [ node_id_X, node_id_Y, dictionary_for_attribute]
-    list_of_edge_for_networkx = make_list_of_edge_for_networkx(dic_config, list_edge_info)
+    list_of_edge_for_networkx = make_list_of_edge_for_networkx(list_edge_info)
     fo_log.write("\n\n [F1]Show raw edges----------")
     log_message = '[F1] Show raw edges'
     for e in list_of_edge_for_networkx:
