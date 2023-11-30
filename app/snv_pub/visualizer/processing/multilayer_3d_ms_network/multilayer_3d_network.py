@@ -488,44 +488,28 @@ def remove_node_edge_with_no_layer_attribute(config_o, dic_cluster_total_input_i
     return dic_cluster_total_input_idx_MOD_vs_node_info_new, list_of_edge_for_networkx_new
 
 
-def threshold_edges(dic_config, list_of_edge_for_networkx):
+def threshold_edges(score_threshold, list_of_edge_for_networkx):
     ###########################
     #  [T] note. now you used threshold to select edges.
-    #  which means,  some of nodes in node list is not used in edge list.
-    #   This will cause trouble later.
+    #  which means,  some of the nodes in node list is not used in edge list.
+    #  This will cause trouble later.
     #  so now you can select nodes actually present in edge list and update.
 
-    # this list contains edge as tuple actually pass threshol
-    l_edges_in_use = []
-    ##
-    #  this list contains node id actually used in netwrok passing threshold.
-    list_cluster_global_accession_in_use = []
     logger.debug("function [threshold_edges] select edges using threshold")
-    # fo_log.write( "\nlen of list_of_edge_for_networkx before thresholding\n" + str(len(list_of_edge_for_networkx)) + "\n" )
-    # this list contain edge color infor in accordance with l_edges_in_use
-    l_edges_in_use_color = []
 
     list_of_edge_for_networkx_new = []
     list_node_total_input_idx_mod_in_use = []
 
-    mz_tol = 0.01
-
     # dic_cluster_total_input_idx_vs_cluster_info
     for edge in list_of_edge_for_networkx:
 
-        if edge[2]['spec_sim_score'] > dic_config["score_threshold"]:
+        if edge[2]['spec_sim_score'] > score_threshold:
             list_of_edge_for_networkx_new.append(edge)
-            list_node_total_input_idx_mod_in_use.append(edge[0])
-            list_node_total_input_idx_mod_in_use.append(edge[1])
-            list_node_total_input_idx_mod_in_use = list(set(list_node_total_input_idx_mod_in_use))
-            l_edges_in_use.append((edge[0], edge[1]))
-            # now check mz difference and if mz match, specify color.
-            if abs(edge[2]['delta_mz']) < mz_tol:
-                l_edges_in_use_color.append(1)
-            else:
-                l_edges_in_use_color.append(0)
 
-    # list_of_edge_for_networkx = list_of_edge_for_networkx_new
+            if edge[0] not in list_node_total_input_idx_mod_in_use:
+                list_node_total_input_idx_mod_in_use.append(edge[0])
+            if edge[1] not in list_node_total_input_idx_mod_in_use:
+                list_node_total_input_idx_mod_in_use.append(edge[1])
 
     logger.debug("Finished function [threshold_edges] ")
     return list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use
@@ -1868,7 +1852,7 @@ def read_data_for_multilayer_3d_network(dic_config):
     # make list_of_edges_for_networkx
     logger.debug("Main  [make list_of_edges_for_networkx]")
     list_of_edge_for_networkx = make_list_of_edge_for_networkx(list_edge_info)
-    list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config,
+    list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config['score_threshold'],
                                                                                           list_of_edge_for_networkx)
 
     dic_source_data = {}
@@ -2115,7 +2099,7 @@ def process_3d_network_data(dic_source_data, dic_config):
     #  the edge type can be "inner_ref_layer", "inter_sample_ref_layer", "inner_sample_layer"
     logger.debug("[H1] Thresholding edges")
 
-    list_of_edge_for_networkx_to_show, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config,
+    list_of_edge_for_networkx_to_show, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config['score_threshold'],
                                                                                               list_of_edge_for_networkx)
 
     # what you get is [ node_id_X, node_id_Y, dictionary_for_attribute]
