@@ -152,6 +152,8 @@ def read_cluster_attribute(path):
     else:
         df_cluster_info['retention_time_in_sec'] = 0.0
 
+    df_cluster_info['cluster_id'] = df_cluster_info['cluster_id'].astype(str)
+
     # Fill compound data.
     df_cluster_info[['compound_name', 'inchi', 'inchi_key']]\
         = df_cluster_info[['compound_name', 'inchi', 'inchi_key']].fillna('')
@@ -219,7 +221,6 @@ def read_cluster_attribute(path):
                  'instrument',
                  'instrument_type',
                  'fragmentation_type',
-                 'source_filename',
                  'source_filepath']] = ''
     
     df_spectrum[['unique_number',
