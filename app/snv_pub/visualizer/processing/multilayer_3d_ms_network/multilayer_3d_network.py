@@ -1796,9 +1796,6 @@ def read_data_for_multilayer_3d_network(dic_config):
     add_external_cmpd_info(dic_cluster_total_input_idx_vs_cluster_info, dic_config['foldername_ext_cmpd_info'])
     logger.warning('* main [D]finished reading external compound info')
 
-    # Add color to T3DB compounds
-    add_color_to_t3db_compound(dic_config['color_toxic_compound'], dic_cluster_total_input_idx_vs_cluster_info)
-
     # make original copy
     dic_cluster_total_input_idx_vs_cluster_info_original = copy.deepcopy(dic_cluster_total_input_idx_vs_cluster_info)
 
@@ -1830,17 +1827,6 @@ def read_data_for_multilayer_3d_network(dic_config):
     dic_global_accession_vs_mass_feature_original = read_feature_table(dic_config)
     dic_global_accession_vs_mass_feature = read_feature_table(dic_config)
 
-    # select nodes based on keyword
-    dic_cluster_total_input_idx_vs_cluster_info =\
-        select_nodes_based_on_keyword(dic_config['filter_select_category'],
-                                      dic_config['filter_select_keyword'],
-                                      dic_cluster_total_input_idx_vs_cluster_info)
-    logger.debug(f'select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info '
-                 f'{len(dic_cluster_total_input_idx_vs_cluster_info)}')
-
-    logger.debug(
-        f'len dic_cluster_total_input_idx_vs_cluster_info: {str(len(dic_cluster_total_input_idx_vs_cluster_info))}')
-
     # locate nodes to layers
     _, list_edge_info, _ = \
         locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_idx_vs_cluster_info, list_edge_info)
@@ -1851,7 +1837,7 @@ def read_data_for_multilayer_3d_network(dic_config):
     logger.debug('Main  [make list_of_edges_for_networkx]')
     list_of_edge_for_networkx = make_list_of_edge_for_networkx(list_edge_info)
     _, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config['score_threshold'],
-                                                                                          list_of_edge_for_networkx)
+                                                              list_of_edge_for_networkx)
 
     dic_source_data = {
         'dic_config': dic_config,
@@ -1869,8 +1855,6 @@ def read_data_for_multilayer_3d_network(dic_config):
 
 
 def process_3d_network_data(dic_source_data, dic_config):
-    # dic_source_data_1
-
     dic_global_accession_vs_mass_feature = dic_source_data["dic_global_accession_vs_mass_feature"]
 
     logger.debug("[create_multilayer_3d_network_data]processing")
@@ -1880,18 +1864,16 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     # Read some external files
     # suspect mz file
-
     dic_config["dic_filename_vs_dic_suspect_cmpd_vs_mz"] = suspect_compound.read_file_suspect_mz(dic_config)
 
-    ###   [C1]]--------------------------------------
-
-    # deeocopy input idx and cluster info
+    # [C1] --------------------------------------
+    # deepcopy input idx and cluster info
     dic_cluster_total_input_idx_vs_cluster_info_original = copy.deepcopy(
         dic_source_data["dic_cluster_total_input_idx_vs_cluster_info"])
 
     fo_log.write("\n\n\n another fig update")
-    fo_log.write("\n dic_cluster_total_input_idx_vs_cluster_info_original:" + str(
-        len(dic_cluster_total_input_idx_vs_cluster_info_original)))
+    fo_log.write(f"\n dic_cluster_total_input_idx_vs_cluster_info_original: "
+                 f"{len(dic_cluster_total_input_idx_vs_cluster_info_original)}")
 
     logger.info('Another fig update')
     logger.info(f'Length of dic_cluster_total_input_idx_vs_cluster_info_original: '
@@ -1905,7 +1887,8 @@ def process_3d_network_data(dic_source_data, dic_config):
         select_nodes_based_on_keyword(dic_config['filter_select_category'],
                                       dic_config['filter_select_keyword'],
                                       dic_cluster_total_input_idx_vs_cluster_info_original)
-    logger.debug(f"\n selecte nodes based on keyword : len ddic_cluster_total_input_idx_vs_cluster_info_new: {str(len(dic_cluster_total_input_idx_vs_cluster_info_new))}")
+    logger.debug(f"\n select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info_new: "
+                 f"{str(len(dic_cluster_total_input_idx_vs_cluster_info_new))}")
 
     #  [C2]
     # select nodes based on prec mz
