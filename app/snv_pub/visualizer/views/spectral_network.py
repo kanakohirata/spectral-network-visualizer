@@ -242,6 +242,7 @@ class GetNetworkData(generic.TemplateView):
         # Parameters for suspect compound
         ion_mode = request.POST.get('ion_mode')
         list_adduct_for_suspect = request.POST.getlist('adducts_for_suspect_compound', [])
+        config['l_adduct_type_for_suspect'] = list_adduct_for_suspect
         for adduct_name in list_adduct_for_suspect:
             logger.debug(f"{adduct_name}: {adduct_dict[adduct_name]['Adduct_Mass']}")
             config['l_adduct_mass_for_suspect'].append(adduct_dict[adduct_name]['Adduct_Mass'])
