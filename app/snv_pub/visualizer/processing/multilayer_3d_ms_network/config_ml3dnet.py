@@ -3,6 +3,7 @@ import ast
 import sys
 
 from logging import basicConfig, getLogger, DEBUG
+
 logger = getLogger(__name__)
 logger.setLevel(DEBUG)
 basicConfig(
@@ -11,16 +12,13 @@ basicConfig(
 )
 
 
-
-def get_dic_config_initialized(setting = 0 ):
-
+def get_dic_config_initialized(setting=0):
     dic_config = {}
 
     # status of input/processed data.
     # [if all values are valid]
     dic_config["all_data_valid"] = True
-    dic_config["l_func_invalid_data"] =[]
-
+    dic_config["l_func_invalid_data"] = []
 
     # [filename] ----------------------------------------------------------------------
     dic_config["filename_edge_info"] = "output_test_0\output_.edgeinfo.tsv"
@@ -28,14 +26,11 @@ def get_dic_config_initialized(setting = 0 ):
     dic_config["filename_feature_table"] = ""
     dic_config["foldername_ext_cmpd_info"] = ""
 
-
-
     # [filter]------------------------
     # e.g.     none, list_cmpd_classification_superclass
     dic_config["filter_select_category"] = "none"
     # e.g.   ###   Phenylpropanoids and polyketides    Lipids and lipid-like molecules
     dic_config["filter_select_keyword"] = ""
-
 
     # [layer]--------------------------------
     #  you can choose from  : source_filename   , list_cmpd_classification_superclass , list_compound_categories
@@ -49,15 +44,13 @@ def get_dic_config_initialized(setting = 0 ):
     dic_config['color_toxic_compound'] = False
 
     #   0 : no mesh   1: with mesh
-    dic_config["mesh_mode"] =  1
-
-
+    dic_config["mesh_mode"] = 1
 
     # [mass_range] -------------
     dic_config["mass_lower_limit"] = 100.0
     dic_config["mass_higher_limit"] = 1000.0
 
-    dic_config["dic_suspect_cmpd_vs_mz"] ={}
+    dic_config["dic_suspect_cmpd_vs_mz"] = {}
 
     # adduct mass for suspect list -----------------------------
 
@@ -72,17 +65,17 @@ def get_dic_config_initialized(setting = 0 ):
     dic_config["l_adduct_type_for_suspect"] = ["M+H"]
 
     # mass defect--------------------------------------------------
-    dic_config["list_mass_defect"]=[]
+    dic_config["list_mass_defect"] = []
 
     # product/fragment ion required
-    dic_config["list_product_mz_required"] =[]
+    dic_config["mz_tolerance_for_fragment"] = 0.01
+    dic_config["list_product_mz_required"] = []
 
     # mz tolerance -------
     dic_config["mz_tol"] = 0.01
 
-    #[threshold]--------------
+    # [threshold]--------------
     dic_config["score_threshold"] = 0.75
-
 
     # network realated ----------------
     dic_config["subgraph_type"] = "node_quant"
@@ -109,13 +102,10 @@ def get_dic_config_initialized(setting = 0 ):
     return dic_config
 
 
-
-
-def read_config_file(config_filename  ):
-
+def read_config_file(config_filename):
     # read config
 
-    #config_o = Config_multilayer_3d()
+    # config_o = Config_multilayer_3d()
 
     dic_config = {}
     #####################
@@ -145,23 +135,23 @@ def read_config_file(config_filename  ):
     if len(str_from_file) > 1:
         dic_config["str_key_attribute_to_base_layer"] = str_from_file
 
-    dic_config["mesh_mode"] =  int(inifile.get("layer", "mesh_mode"))
+    dic_config["mesh_mode"] = int(inifile.get("layer", "mesh_mode"))
 
     # mass range -------------
     dic_config["mass_lower_limit"] = float(inifile.get("mass_range", "mass_lower_limit"))
     dic_config["mass_higher_limit"] = float(inifile.get("mass_range", "mass_higher_limit"))
 
-    #MODIFIED20220714-------------
+    # MODIFIED20220714-------------
     #  dictionary suspect compound vs mz ----------------------------
     line_v = inifile.get("mass_range", "list_suspect_mz")
-    #dic_as_str = (line_v.strip().rstrip('\n').split(","))
+    # dic_as_str = (line_v.strip().rstrip('\n').split(","))
     try:
-        dic_config["dic_suspect_cmpd_vs_mz"] =  ast.literal_eval(line_v)
+        dic_config["dic_suspect_cmpd_vs_mz"] = ast.literal_eval(line_v)
 
     except ValueError:
 
-        print ( " something wrong with -mass_range-dic_suspect_cmpd_vs_mz-")
-        #print (dic_as_str)
+        print(" something wrong with -mass_range-dic_suspect_cmpd_vs_mz-")
+        # print (dic_as_str)
         dic_config["all_data_valid"] = False
         dic_config["l_func_invalid_data"].append("read_config_file")
 
@@ -178,47 +168,42 @@ def read_config_file(config_filename  ):
         print("appended")
     dic_config["list_filename_suspect_mz"] = list_filename_suspect
 
-
     # adduct mass for suspect list -----------------------------
     line_v = inifile.get("mass_range", "list_adduct_mass_for_suspect")
-
 
     # only when mass defect parameter is specified.  set to -1 or " " if mass defect is not used
     if not line_v == "none":
         list_as_str = (line_v.strip().rstrip('\n').split(","))
 
-        print (list_as_str)
-        if len( list_as_str) > 0 :
+        print(list_as_str)
+        if len(list_as_str) > 0:
             try:
                 dic_config["l_adduct_mass_for_suspect"] = [float(val) for val in list_as_str]
             except:
-                print ( " something wrong with -mass_range-list_adduct_mass_for_suspect-")
+                print(" something wrong with -mass_range-list_adduct_mass_for_suspect-")
                 dic_config["all_data_valid"] = False
                 dic_config["l_func_invalid_data"].append("read_config_file")
-
 
     # mass defect--------------------------------------------------
     line_v = inifile.get("mass_range", "list_mass_defect")
 
-    dic_config["list_mass_defect"]=[]
+    dic_config["list_mass_defect"] = []
 
     # only when mass defect parameter is specified.  set to -1 or " " if mass defect is not used
     if not line_v == "none":
         list_as_str = (line_v.strip().rstrip('\n').split(","))
 
-        print (list_as_str)
-        if len( list_as_str) > 0 :
+        print(list_as_str)
+        if len(list_as_str) > 0:
             try:
                 dic_config["list_mass_defect"] = [float(val) for val in list_as_str]
             except ValueError:
-                print ( " something wrong with -mass_range-list_mass_defect-")
+                print(" something wrong with -mass_range-list_mass_defect-")
                 dic_config["all_data_valid"] = False
                 dic_config["l_func_invalid_data"].append("read_config_file")
 
-
-
     # product/fragment ion required
-    dic_config["list_product_mz_required"] =[]
+    dic_config["list_product_mz_required"] = []
 
     line_v = inifile.get("mass_range", "list_product_mz_required")
 
@@ -227,13 +212,12 @@ def read_config_file(config_filename  ):
         try:
             dic_config["list_product_mz_required"] = [float(val) for val in list_as_str]
         except ValueError:
-            print ( " something wrong with -mass_range-list_product_mz_required-")
+            print(" something wrong with -mass_range-list_product_mz_required-")
             dic_config["all_data_valid"] = False
             dic_config["l_func_invalid_data"].append("read_config_file")
 
     # mz tolerance -------
     dic_config["mz_tol"] = float(inifile.get("mass_range", "mz_tol"))
-
 
     # ---------MODIFIED20220714
 
@@ -247,7 +231,6 @@ def read_config_file(config_filename  ):
 
     dic_config["n_level_community_detection"] = int(inifile.get("community", "level_community_detection"))
 
-
     dic_config["l_global_accession_for_node_select_subgraph"] = []
 
     line_v = inifile.get("subgraph", "l_total_input_idx_to_remove")
@@ -256,11 +239,9 @@ def read_config_file(config_filename  ):
         try:
             dic_config["l_total_input_idx_to_remove"] = [str(val) for val in list_as_str]
         except ValueError:
-            print ( " something wrong with -subgraph-l_total_input_idx_to_remove-")
+            print(" something wrong with -subgraph-l_total_input_idx_to_remove-")
             dic_config["all_data_valid"] = False
             dic_config["l_func_invalid_data"].append("read_config_file")
-
-
 
     # threshold ----
     dic_config["score_threshold"] = float(inifile.get("threshold", "score_threshold"))
@@ -285,5 +266,3 @@ def read_config_file(config_filename  ):
     str_o = ""
 
     return dic_config
-
-
