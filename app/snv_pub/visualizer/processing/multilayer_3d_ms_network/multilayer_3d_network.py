@@ -18,7 +18,8 @@ from . import multilayer_3d_mesh_functsions as m3d_mesh
 from . import multilayer_3d_rescale_functions as m3d_rescale
 from . import read_t3db_a1
 from . import suspect_compound
-from .filter import (select_nodes_based_on_keyword,
+from .filter import (remove_nodes_based_on_total_input_idx,
+                     select_nodes_based_on_keyword,
                      select_nodes_based_on_mass_defect,
                      select_nodes_based_on_prec_mz,
                      select_nodes_based_on_product_mz_required)
@@ -1819,15 +1820,9 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     # remove nodes based on user defined input idx----------------------------------
     logger.debug(f"dic_config[l_total_input_idx_to_remove] {str(dic_config['l_total_input_idx_to_remove'])}")
-
-    dic_cluster_total_input_idx_vs_cluster_info_new = {}
-    for cluster_total_input_idx, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-        # [C6]   remove node based on user-defined global accession
-        if not cluster_total_input_idx in dic_config["l_total_input_idx_to_remove"]:
-            dic_cluster_total_input_idx_vs_cluster_info_new[cluster_total_input_idx] = cluster_info
-
-    # take over
-    dic_cluster_total_input_idx_vs_cluster_info = dic_cluster_total_input_idx_vs_cluster_info_new
+    dic_cluster_total_input_idx_vs_cluster_info =\
+        remove_nodes_based_on_total_input_idx(dic_config["l_total_input_idx_to_remove"],
+                                              dic_cluster_total_input_idx_vs_cluster_info)
 
     ## also remove edges that have nodes to be removed.
     list_edge_info_original_edit = []
