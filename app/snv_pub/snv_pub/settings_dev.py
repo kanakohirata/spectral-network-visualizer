@@ -61,8 +61,8 @@ DATABASES = {
     }
 }
 
-if not os.path.isdir(f'{BASE_DIR}/visualizer/processing/multilayer_3d_ms_network_for_django/logs'):
-    os.makedirs(f'{BASE_DIR}/visualizer/processing/multilayer_3d_ms_network_for_django/logs')
+if not os.path.isdir(f'{BASE_DIR}/visualizer/processing/multilayer_3d_ms_network/logs'):
+    os.makedirs(f'{BASE_DIR}/visualizer/processing/multilayer_3d_ms_network/logs')
 
 if not os.path.isdir(f'{BASE_DIR}/report'):
     os.makedirs(f'{BASE_DIR}/report')
@@ -84,8 +84,8 @@ LOGGING = {
             'handlers': ['console'],
             'level': 'DEBUG',
         },
-        # Logger for multilayer_3d_ms_network_for_django package
-        'visualizer.processing.multilayer_3d_ms_network_for_django': {
+        # Logger for multilayer_3d_ms_network package
+        'visualizer.processing.multilayer_3d_ms_network': {
             'handlers': ['console', 'file_multilayer_3d_ms_network'],
             'level': 'WARNING',
             'propagate': False,
@@ -108,7 +108,7 @@ LOGGING = {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'formatter': 'dev',
-            'filename': 'visualizer/processing/multilayer_3d_ms_network_for_django/logs/info.log',
+            'filename': 'visualizer/processing/multilayer_3d_ms_network/logs/info.log',
         },
         'visualizer_report': {
             'level': 'INFO',

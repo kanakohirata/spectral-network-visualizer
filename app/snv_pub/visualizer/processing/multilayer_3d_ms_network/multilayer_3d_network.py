@@ -82,19 +82,13 @@ def select_nodes_based_on_keyword(filter_select_category, filter_select_keyword,
         return dic_cluster_total_input_idx_vs_cluster_info
 
 
-def select_nodes_based_on_prec_mz(conf_o, dic_cluster_total_input_idx_vs_cluster_info):
-    # select specific node .
+def select_nodes_based_on_prec_mz(mass_lower_limit, mass_higher_limit, dic_cluster_total_input_idx_vs_cluster_info):
+    # select specific node.
     logger.debug("[G2] select specific node/cluster based on prec mz")
-    # if conf_o.filter_select_category == "none":
-    #    print " no keyword selected for node selection"
-    #    return dic_cluster_total_input_idx_vs_cluster_info
-
-    # if conf_o.filter_select_category != "none" :
     dic_cluster_total_input_idx_vs_cluster_info_new = {}
 
     for total_input_idx, cl_o in dic_cluster_total_input_idx_vs_cluster_info.items():
-        if cl_o["represen_spec_uni"]["precursor_mz"] >= conf_o["mass_lower_limit"] and cl_o["represen_spec_uni"][
-            "precursor_mz"] <= conf_o["mass_higher_limit"]:
+        if mass_lower_limit <= cl_o["represen_spec_uni"]["precursor_mz"] <= mass_higher_limit:
             dic_cluster_total_input_idx_vs_cluster_info_new[total_input_idx] = cl_o
 
     return dic_cluster_total_input_idx_vs_cluster_info_new
@@ -1883,28 +1877,26 @@ def process_3d_network_data(dic_source_data, dic_config):
     add_color_to_t3db_compound(dic_config['color_toxic_compound'], dic_cluster_total_input_idx_vs_cluster_info_original)
 
     # select nodes based on keyword
-    dic_cluster_total_input_idx_vs_cluster_info_new =\
+    dic_cluster_total_input_idx_vs_cluster_info =\
         select_nodes_based_on_keyword(dic_config['filter_select_category'],
                                       dic_config['filter_select_keyword'],
                                       dic_cluster_total_input_idx_vs_cluster_info_original)
-    logger.debug(f"\n select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info_new: "
-                 f"{str(len(dic_cluster_total_input_idx_vs_cluster_info_new))}")
+    logger.debug(f"\n select nodes based on keyword : len dic_cluster_total_input_idx_vs_cluster_info: "
+                 f"{str(len(dic_cluster_total_input_idx_vs_cluster_info))}")
 
     #  [C2]
     # select nodes based on prec mz
-    dic_cluster_total_input_idx_vs_cluster_info_new = select_nodes_based_on_prec_mz(dic_config,
-                                                                                    dic_cluster_total_input_idx_vs_cluster_info_new)
-
-    # take over
-    dic_cluster_total_input_idx_vs_cluster_info = dic_cluster_total_input_idx_vs_cluster_info_new
-
-    logger.debug(
-        f"[C2]: len dic_cluster_total_input_idx_vs_cluster_info {str(len(dic_cluster_total_input_idx_vs_cluster_info))}")
+    logger.debug(f"[C2]: len dic_cluster_total_input_idx_vs_cluster_info "
+                 f"{len(dic_cluster_total_input_idx_vs_cluster_info)}")
+    dic_cluster_total_input_idx_vs_cluster_info =\
+        select_nodes_based_on_prec_mz(dic_config["mass_lower_limit"],
+                                      dic_config["mass_higher_limit"],
+                                      dic_cluster_total_input_idx_vs_cluster_info)
 
     fo_log.write(f"\n after selecting nodes, dic_cluster_total_input_idx_vs_cluster_info: "
                  f"{len(dic_cluster_total_input_idx_vs_cluster_info)}")
     fo_log.flush()
-    logger.info(f'After selecting nodes, length of dic_cluster_total_input_idx_vs_cluster_info: '
+    logger.info(f'After selecting nodes based on precursor m/z, length of dic_cluster_total_input_idx_vs_cluster_info: '
                 f'{len(dic_cluster_total_input_idx_vs_cluster_info)}')
 
     list_edge_info_original = copy.deepcopy(dic_source_data["list_edge_info"])
