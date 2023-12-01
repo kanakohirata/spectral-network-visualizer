@@ -5,9 +5,8 @@ from django.template import loader
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy
 from logging import getLogger
-import os
-import random
-import string
+import re
+
 
 logger = getLogger(__name__)
 
@@ -243,4 +242,25 @@ def validate_mass_defect(str_mass_defects):
 
 
 class MassDefectParameterForm(CustomParameterForm):
-    str_mass_defects = forms.CharField(label='Mass Defects', validators=[validate_mass_defect])
+    str_mass_defects = forms.CharField(label='Mass Defects', validators=[validate_mass_defect],
+                                       help_text='Enter numbers delimited with commas.')
+
+
+def validate_fragment_mz(str_fragment_mz_values: str):
+    if str_fragment_mz_values:
+        str_fragment_mz_values = str_fragment_mz_values.strip()
+        if not re.search(r'\d+\.?\d+', str_fragment_mz_values):
+            raise ValidationError(
+                    gettext_lazy('Enter numbers delimited with commas, spaces or newlines.')
+                )
+
+
+class FragmentMzParameterForm(CustomParameterForm):
+    mz_tolerance_for_fragment = forms.FloatField(
+        label='<i>m/z</i> Tolerance (Da)', min_value=0,
+        widget=forms.NumberInput(attrs={'step': 0.0001, 'placeholder': '0.01'})
+    )
+
+    str_fragment_mz_values = forms.CharField(label='Fragment m/z (OR Search)', validators=[validate_fragment_mz],
+                                             widget=forms.Textarea(attrs={'rows': '5'}),
+                                             help_text='Enter numbers delimited with commas, spaces or newlines.')

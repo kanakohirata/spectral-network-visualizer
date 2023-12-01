@@ -38,6 +38,7 @@
                         <button id="global-accession-tab" type="button" class="parameter-tab">Global Accession</button>
                         <button id="reference-layer-tab" type="button" class="parameter-tab">Reference Layer</button>
                         <button id="annotation-tab" type="button" class="parameter-tab">Annotation</button>
+                        <button id="fragment-tab" type="button" class="parameter-tab">Fragment</button>
                     </div>
                     <div id="network-parameter-container">
                         <div id="basic-parameters" class="parameter-window">
@@ -183,10 +184,31 @@
                                             <li>{{ error | escape }}</li>
                                             {% endfor %}
                                         </ul>
+                                        {% if field.help_text %}
+                                        <p class="help-text">{{ field.help_text }}</p>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endfor %}
                             </div>
+                        </div>
+                        <div id="fragment-parameters" class="parameter-window" style="display: none;">
+                            {% for field in fragment_mz_parameter_from %}
+                            <div class="flex-row label-input-container">
+                                <label for="{{ field.id_for_label }}" class="row-label">{{ field.label|safe }}</label>
+                                <div class="flex-column input-message-container">
+                                    {{ field }}
+                                    <ul class="errorlist empty">
+                                        {% for error in field.errors %}
+                                        <li>{{ error | escape }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                    {% if field.help_text %}
+                                    <p class="help-text">{{ field.help_text }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -278,7 +300,7 @@
                         <label for="dropdown-for-traces-to-update-node-size" class="flex-row dropdown-button">
                             <span class="material-symbols-outlined symbol-add">add</span>
                             <span class="material-symbols-outlined symbol-remove">remove</span>
-                            <p style="display: inline flow-root;">Trace Setting</p>
+                            <span style="display: inline flow-root;">Trace Setting</span>
                         </label>
                         <div class="dropdown-box flex-column">
                             <div class="dropdown-help">
@@ -304,7 +326,7 @@
                         <label for="dropdown-for-traces-to-update-line-width" class="flex-row dropdown-button">
                             <span class="material-symbols-outlined symbol-add">add</span>
                             <span class="material-symbols-outlined symbol-remove">remove</span>
-                            <p style="display: inline flow-root;">Trace Setting</p>
+                            <span style="display: inline flow-root;">Trace Setting</span>
                         </label>
                         <div class="dropdown-box flex-column">
                             <div class="dropdown-help">

@@ -6,15 +6,10 @@ from django.views import generic
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.shortcuts import render
 from logging import getLogger
-import numpy as np
-import matplotlib
-from matplotlib import cm
 import os
 import pandas as pd
-from plotly import graph_objects as go
-import plotly.colors as pcolors
+import re
 import time
-
 from ..files.uploadhandler import TemporaryDirectoryUploadHandler
 from ..forms import *
 from ..processing.multilayer_3d_ms_network import config_ml3dnet
@@ -36,6 +31,7 @@ class SpectralNetworkView(generic.TemplateView):
     annotation_parameter_form_class = AnnotationParameterFrom
     suspect_compound_parameter_form_class = SuspectCompoundParameterFrom
     mass_defect_parameter_form_class = MassDefectParameterForm
+    fragment_mz_parameter_from_class = FragmentMzParameterForm
 
     def get(self, request, *args, **kwargs):
         logger.debug(request.META.get('REMOTE_ADDR'))
@@ -81,6 +77,8 @@ class SpectralNetworkView(generic.TemplateView):
             context['suspect_compound_parameter_form'] = self.suspect_compound_parameter_form_class()
         if not kwargs.get('mass_defect_parameter_form'):
             context['mass_defect_parameter_form'] = self.mass_defect_parameter_form_class()
+        if not kwargs.get('fragment_mz_parameter_from'):
+            context['fragment_mz_parameter_from'] = self.fragment_mz_parameter_from_class()
 
         return context
 
@@ -90,7 +88,7 @@ class GetNetworkData(generic.TemplateView):
     template_name = 'visualizer/spectral_network.html'
     all_form_classes = (InputFileForm, BasicParameterForm, QuantitativeParameterForm, GlobalAccessionParameterForm,
                         ReferenceLayerParameterForm, AnnotationParameterFrom, SuspectCompoundParameterFrom,
-                        MassDefectParameterForm)
+                        MassDefectParameterForm, FragmentMzParameterForm)
 
     def setup(self, request, *args, **kwargs):
         request.upload_handlers = [TemporaryDirectoryUploadHandler(request)]
@@ -264,6 +262,16 @@ class GetNetworkData(generic.TemplateView):
         if config['l_adduct_mass_for_suspect'] or config['list_mass_defect']:
             if request.POST.get('mz_tolerance'):
                 config['mz_tol'] = float(request.POST.get('mz_tolerance'))
+
+        # Parameters for fragment
+        str_fragment_mz_values = request.POST.get('str_fragment_mz_values', '')
+        list_fragment_mz = []
+        if re.search(r'\d+\.?\d+', str_fragment_mz_values):
+            list_fragment_mz = [float(n) for n in re.findall(r'\d+\.?\d+', str_fragment_mz_values)]
+        config['list_product_mz_required'] = list_fragment_mz
+
+        if config['list_product_mz_required'] and request.POST.get('mz_tolerance_for_fragment'):
+            config['mz_tolerance_for_fragment'] = float(request.POST.get('mz_tolerance_for_fragment'))
 
         # List of total_input_idx_MOD to remove
         logger.debug(request.POST.get('l_total_input_idx_to_remove'))
