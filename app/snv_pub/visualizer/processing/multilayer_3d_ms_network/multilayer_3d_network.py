@@ -95,45 +95,43 @@ def select_nodes_based_on_prec_mz(mass_lower_limit, mass_higher_limit, dic_clust
 
 
 # MODIFIED20220714---------------
-def select_nodes_based_on_mass_defect(conf_o, dic_cluster_total_input_idx_vs_cluster_info):
+def select_nodes_based_on_mass_defect(mz_tol, list_mass_defect, dic_cluster_total_input_idx_vs_cluster_info):
     # mz tolerance to examine mass defect
-    mz_tol = conf_o.mz_tol
     dic_cluster_total_input_idx_vs_cluster_info_new = {}
     count_mass_defect_match = 0
     count_sample = 0
     count_dic = 0
 
-    logger.debug(f"conf_o.list_mass_defect {conf_o.list_mass_defect}")
+    logger.debug(f'list_mass_defect {list_mass_defect}')
 
     for total_input_idx, cl_o in dic_cluster_total_input_idx_vs_cluster_info.items():
-        count_dic = count_dic + 1
+        count_dic += 1
         # for ref spec data, you can just mass
-        f_add_to_new_dic = 1
+        flag_add_to_new_dic = 1
 
         # for sample data, you have to examine mass defect
-        if cl_o.tag.startswith("sample"):
+        if cl_o['tag'].startswith('sample'):
 
-            f_add_to_new_dic = 0
-            count_sample = count_sample + 1
+            flag_add_to_new_dic = 0
+            count_sample += 1
 
             # get mass defect for current node.
-            node_mass_defect = cl_o.represen_spec_uni.precursor_mz - float(int(cl_o.represen_spec_uni.precursor_mz))
-            # print( cl_o.represen_spec_uni.precursor_mz , " md: ",node_mass_defect)
+            node_mass_defect = cl_o['represen_spec_uni']['precursor_mz'] - int(cl_o['represen_spec_uni']['precursor_mz'])
 
             # for all mass defect value specified in config.
-            for mass_df_specified in conf_o.list_mass_defect:
+            for mass_df_specified in list_mass_defect:
                 # examine mass defect match to config val
-
-                # print(  "    abs(node_mass_defect - mass_df_specified)" , abs(node_mass_defect - mass_df_specified))
                 if abs(node_mass_defect - mass_df_specified) < mz_tol:
-                    count_mass_defect_match = count_mass_defect_match + 1
-                    f_add_to_new_dic = 1
-                    # print("---------------mass defect matched")
+                    _prec_mz = cl_o['represen_spec_uni']['precursor_mz']
+                    count_mass_defect_match += 1
+                    flag_add_to_new_dic = 1
+                    break
+
         # if mass defect match, add to new dictionary
-        if f_add_to_new_dic == 1:
+        if flag_add_to_new_dic == 1:
             dic_cluster_total_input_idx_vs_cluster_info_new[total_input_idx] = cl_o
     logger.debug(f"count dic {str(count_dic)}")
-    logger.debug(f"count samp;;e {str(count_sample)}")
+    logger.debug(f"count sample {str(count_sample)}")
     logger.debug(f" matched mass defect: {str(count_mass_defect_match)}")
     logger.debug(f"len of dic after mass defect exam: {len(dic_cluster_total_input_idx_vs_cluster_info_new)}")
 
@@ -1911,8 +1909,10 @@ def process_3d_network_data(dic_source_data, dic_config):
     #  [C3]-------------------------------------------
     # select nodes based on mass defect
     if len(dic_config["list_mass_defect"]) > 0:
-        dic_cluster_total_input_idx_vs_cluster_info_new = select_nodes_based_on_mass_defect(dic_config,
-                                                                                            dic_cluster_total_input_idx_vs_cluster_info)
+        dic_cluster_total_input_idx_vs_cluster_info_new =\
+            select_nodes_based_on_mass_defect(dic_config["mz_tol"],
+                                              dic_config["list_mass_defect"],
+                                              dic_cluster_total_input_idx_vs_cluster_info)
         # take over
         dic_cluster_total_input_idx_vs_cluster_info = dic_cluster_total_input_idx_vs_cluster_info_new
     # ------------------------------- MODIFIED20220714---------------
