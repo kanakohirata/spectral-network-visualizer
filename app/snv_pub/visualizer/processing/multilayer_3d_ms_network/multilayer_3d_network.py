@@ -27,7 +27,8 @@ from .my_parser.cluster_attribute_parser import read_cluster_attribute
 from .my_parser.compound_info_parser import add_external_cmpd_info
 from .my_parser.edge_info_parser import read_edge_info
 from .my_parser.feature_table_parser import read_feature_table
-from .utils import add_color_to_t3db_compound
+from .utils import (add_color_to_t3db_compound,
+                    add_suspect_compound_info)
 
 
 logger = getLogger(__name__)
@@ -67,7 +68,9 @@ def select_nodes_for_subgraph(conf_o):
         # print  "l_global_accession_for_subgraph" ,l_global_accession_for_subgraph
 
 
-def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_idx_vs_cluster_info, list_edge_info):
+def locate_nodes_to_layers_and_update_edges(dic_config,
+                                            dic_cluster_total_input_idx_vs_cluster_info,
+                                            list_edge_info) -> tuple:
     """
 
     Parameters
@@ -111,10 +114,6 @@ def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_
     ######################################################
     logger.debug('Start locate_nodes_to_layers_and_update_edges()')
     fo = open("log_locate_nodes_to_layers.txt", "w")
-    
-    for i, cluster_info in dic_cluster_total_input_idx_vs_cluster_info.items():
-        if cluster_info['global_accession'] == '1871|MSMS-Pos-Respect_reference.msp':
-            print(1)
 
     dic_cluster_total_input_idx_MOD_vs_node_info = {}
     dic_cluster_id_vs_l_cluster_total_input_idx_MOD = {}
@@ -273,7 +272,7 @@ def locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_
 
                     dic_edge_info_update['edge_type'] = edge_type
                     list_edge_info_mod.append(dic_edge_info_update)
-    print(1)
+
     # take over
     list_edge_info = list_edge_info_mod
 
@@ -1818,28 +1817,16 @@ def process_3d_network_data(dic_source_data, dic_config):
         logger.debug(f" l of dic after product filer: {len(dic_cluster_total_input_idx_vs_cluster_info)}")
     # ------------------------------MODIFIED20220719---------------
 
-    # remove nodes based on user defined input idx----------------------------------
+    # remove nodes based on user defined input idx ----------------------------------
     logger.debug(f"dic_config[l_total_input_idx_to_remove] {str(dic_config['l_total_input_idx_to_remove'])}")
     dic_cluster_total_input_idx_vs_cluster_info =\
         remove_nodes_based_on_total_input_idx(dic_config["l_total_input_idx_to_remove"],
                                               dic_cluster_total_input_idx_vs_cluster_info)
 
-    ## also remove edges that have nodes to be removed.
-    list_edge_info_original_edit = []
-    for edge_info in list_edge_info_original:
-        f_match_to_remove = 0
-        # if one of the nodes in this edge is supposed to be removed
-        if edge_info["spec_cluster_x_total_input_idx"] in dic_config["l_total_input_idx_to_remove"] or edge_info in \
-                dic_config["l_total_input_idx_to_remove"]:
-            f_match_to_remove = 1
-        # if there is no match, append
-        if f_match_to_remove == 0:
-            list_edge_info_original_edit.append(edge_info)
-
-    ###############################33
-    #  [F1]
-    # update node and edges.  now node id is "MOD"  and make node info
-    #     now edge has attribute "inner_sample_layer" etc.
+    ###############################
+    # [F1]
+    # update node and edges. now node id is "MOD" and make node info
+    # now edge has attribute "inner_sample_layer" etc.
 
     logger.debug("[F1] :  update node and edges.")
 
@@ -1854,16 +1841,20 @@ def process_3d_network_data(dic_source_data, dic_config):
     fo_log.write("\n\n[F1]   list_edge_info_original_edit")
     log_message = f'[F1] list_edge_info_original_edit' \
                   f'\nspec_cluster_x_global_accession <-> spec_cluster_y_global_accession'
-    for e in list_edge_info_original_edit:
+    for e in list_edge_info_original:
         fo_log.write("\n" + e["spec_cluster_x_global_accession"] + " <-> " + e["spec_cluster_y_global_accession"])
         log_message += f'\n{e["spec_cluster_x_global_accession"]} <-> {e["spec_cluster_y_global_accession"]}'
     logger.info(log_message)
 
-    dic_cluster_total_input_idx_MOD_vs_node_info, list_edge_info, dic_cluster_id_vs_l_cluster_total_input_idx_MOD = \
-        locate_nodes_to_layers_and_update_edges(dic_config, dic_cluster_total_input_idx_vs_cluster_info,
-                                                list_edge_info_original_edit)
+    (dic_cluster_total_input_idx_MOD_vs_node_info,
+     list_edge_info,
+     dic_cluster_id_vs_l_cluster_total_input_idx_MOD) = \
+        locate_nodes_to_layers_and_update_edges(dic_config,
+                                                dic_cluster_total_input_idx_vs_cluster_info,
+                                                list_edge_info_original)
 
-    fo_log.write("\n\n" + "dic_cluster_total_input_idx_vs_cluster_info")
+    # Logging ------------------------------------------------------------------------
+    fo_log.write("\n\ndic_cluster_total_input_idx_vs_cluster_info")
     for idx, cl in dic_cluster_total_input_idx_vs_cluster_info.items():
         fo_log.write("\n" + str(idx))
     fo_log.flush()
@@ -1871,7 +1862,7 @@ def process_3d_network_data(dic_source_data, dic_config):
                 f'{dic_cluster_total_input_idx_vs_cluster_info.keys()}')
 
     logger.debug("[F1] finished  locate_nodes_to_layers_and_update_edges.")
-    fo_log.write("\n after locate_nodes_to_layers_and_update_edges:" + str(len(list_edge_info)))
+    fo_log.write(f"\n after locate_nodes_to_layers_and_update_edges: {len(list_edge_info)}")
     fo_log.flush()
     logger.info(f'After locate_nodes_to_layers_and_update_edges, length of list_edge_info: {len(list_edge_info)}')
 
@@ -1883,8 +1874,9 @@ def process_3d_network_data(dic_source_data, dic_config):
         fo_log.write("\n" + e["spec_cluster_x_global_accession"] + " <-> " + e["spec_cluster_y_global_accession"])
         log_message += f'\n{e["spec_cluster_x_global_accession"]} <-> {e["spec_cluster_y_global_accession"]}'
     logger.info(log_message)
+    # --------------------------------------------------------------------------------
 
-    # what you get is [ node_id_X, node_id_Y, dictionary_for_attribute]
+    # what you get is [node_id_X, node_id_Y, dictionary_for_attribute]
     list_of_edge_for_networkx = make_list_of_edge_for_networkx(list_edge_info)
     fo_log.write("\n\n [F1]Show raw edges----------")
     log_message = '[F1] Show raw edges'
@@ -1894,7 +1886,7 @@ def process_3d_network_data(dic_source_data, dic_config):
     logger.info(log_message)
 
     # MODIFIED20220714-------------------
-    # [F4]   add info based on  with suspect list.--------------------------------------------------
+    # [F4] add info based on with suspect list.--------------------------------------------------
     logger.debug("starting suspect list matching")
 
     fo_log_key.write("\n number of suspect files: " + str(dic_config["dic_filename_vs_dic_suspect_cmpd_vs_mz"].keys()))
@@ -1903,63 +1895,28 @@ def process_3d_network_data(dic_source_data, dic_config):
         fo_log_key.write("\n   " + k + " : " + str(len(v)))
         logger.info(f'Number of suspect compounds in {k}: {len(v)}')
 
-    mz_tol_suspect = dic_config["mz_tol"]
+    dic_cluster_total_input_idx_MOD_vs_node_info =\
+        add_suspect_compound_info(dic_config["dic_filename_vs_dic_suspect_cmpd_vs_mz"],
+                                  dic_config["mz_tol"],
+                                  dic_cluster_total_input_idx_MOD_vs_node_info)
+    logger.debug("suspect match finished")
 
-    # iterate all { cluuster_total_input_idx, cluster_info}
-    for cluster_total_input_idx, node_info in dic_cluster_total_input_idx_MOD_vs_node_info.items():
-
-        # suspect screening only applies to sample layer---
-        if node_info["layer"].startswith("sample"):
-
-            ## !!!!!!!!!!!! TO BE FIXED
-            ## currently only mz of representeive spec of cluster is matched to suspect list.
-            # for each spectrum in the cluster....
-            # for sp_uni in node_info.spec_cluster.list_spec_uni:
-            # scan all suspect mz ---------------
-
-            # for each suspect file,
-            for path, dic_cmpd_vs_mz in dic_config["dic_filename_vs_dic_suspect_cmpd_vs_mz"].items():
-                filename = os.path.splitext(os.path.basename(path))[0]
-                # for each compound in suspect
-                for cmpd, mz_suspect in dic_cmpd_vs_mz.items():
-                    # if suspect mz match to observed mass.
-                    if abs(node_info["spec_cluster"]["represen_spec_uni"][
-                               "precursor_mz"] - mz_suspect) < mz_tol_suspect:
-                        node_info["suspect"] = filename
-                        node_info["l_source_suspect"].append(filename)
-                        node_info["l_source_suspect"] = list(set(node_info["l_source_suspect"]))
-
-                        if not node_info["name"]:
-                            node_info["name"] = f'{cmpd}_in({filename})'
-                        else:
-                            node_info["name"] += f'_{cmpd}_in({filename})'
-
-    # -----------------MODIFIED20220714
-
-    logger.debug("suspcet match finished")
+    fo_log_key.write(f"\n\n Main F4 (suspect list) len of dic_cluster_total_input_idx_MOD_vs_node_info: "
+                     f"{len(dic_cluster_total_input_idx_MOD_vs_node_info)}\n")
     fo_log_key.flush()
-
-    fo_log_key.write("\n\n Main F4 (suspect list) len of dic_cluster_total_input_idx_MOD_vs_node_info: " + str(
-        len(dic_cluster_total_input_idx_MOD_vs_node_info)) + "\n")
     logger.info(f'Main F4 (suspect list) length of dic_cluster_total_input_idx_MOD_vs_node_info: '
                 f'{len(dic_cluster_total_input_idx_MOD_vs_node_info)}')
 
     # TODO: T3DB matching (K. Hirata, 20221214)
 
-
-
-
-
-    # [H1]-----------------------------------------------
-    ## thresholding edges -----------------------
-    #   list_of_edge_for_networkx_to_show  is list of list   [node_X, node_Y, dictionary {spec_sim_score, delta_mz, edge_type}]
+    # [H1] -----------------------------------------------
+    # thresholding edges -----------------------
+    #  list_of_edge_for_networkx_to_show  is list of list[node_X, node_Y, dictionary{spec_sim_score, delta_mz, edge_type}]
     #  the edge type can be "inner_ref_layer", "inter_sample_ref_layer", "inner_sample_layer"
     logger.debug("[H1] Thresholding edges")
 
-    list_of_edge_for_networkx_to_show, list_node_total_input_idx_mod_in_use = threshold_edges(dic_config['score_threshold'],
-                                                                                              list_of_edge_for_networkx)
-
-    # what you get is [ node_id_X, node_id_Y, dictionary_for_attribute]
+    list_of_edge_for_networkx_to_show, list_node_total_input_idx_mod_in_use =\
+        threshold_edges(dic_config['score_threshold'], list_of_edge_for_networkx)
 
     fo_log.write("\n\n [H1]Show list_of_edge_for_networkx_to_show----------")
     log_message = "\n".join(map(str, list_of_edge_for_networkx_to_show))
