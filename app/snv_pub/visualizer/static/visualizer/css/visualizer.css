@@ -1,5 +1,4 @@
 #page-header {
-  position: -webkit-sticky;
   position: sticky;
   top: 0;
   z-index: var(--z-index-top);
@@ -39,7 +38,6 @@
 
 label {
   display: inline flow-root;
-  width: -webkit-max-content;
   width: -moz-max-content;
   width: max-content;
   color: var(--gray);
@@ -255,7 +253,6 @@ hr {
 }
 
 .popup-box.flex-column {
-  width: -webkit-max-content;
   width: -moz-max-content;
   width: max-content;
   max-width: 1000px;
@@ -299,7 +296,6 @@ hr {
 }
 
 .flex-row.dropdown-button {
-  width: -webkit-max-content;
   width: -moz-max-content;
   width: max-content;
   align-items: center;
@@ -384,7 +380,7 @@ section.subsection:first-of-type {
 }
 
 .help-text {
-  font-size: 1rem;
+  font-size: 1.4rem;
   color: var(--gray);
 }
 
@@ -428,7 +424,7 @@ section.subsection:first-of-type {
 
 #network-parameter-container {
   width: 100%;
-  max-width: 700px;
+  max-width: 800px;
   min-height: 400px;
   padding: 15px;
   border: solid 1px var(--light-gray);
@@ -557,7 +553,6 @@ section.subsection:first-of-type {
 }
 
 #my-hover-container {
-  width: -webkit-max-content;
   width: -moz-max-content;
   width: max-content;
   max-width: 200px;
