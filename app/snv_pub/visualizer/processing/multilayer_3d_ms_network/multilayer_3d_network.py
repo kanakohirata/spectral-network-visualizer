@@ -324,6 +324,83 @@ def make_list_of_edge_for_networkx(list_edge_info):
     return list_of_edge_for_networkx
 
 
+def make_edges_and_nodes_inner_layer(list_attribute_for_layer: list,
+                                     list_of_edge_for_networkx: list,
+                                     dic_cluster_total_input_idx_MOD_vs_node_info: dict,
+                                     fo_log) -> list:
+    """
+
+    Parameters
+    ----------
+    list_attribute_for_layer
+    list_of_edge_for_networkx
+    dic_cluster_total_input_idx_MOD_vs_node_info
+    fo_log
+
+    Returns
+    -------
+    list_dic_edges_nodes_graph_by_layer : list
+        [
+            {'attribute_for_layer': sample_aaa.msp, 'list_of_edge_for_networkx': [...], 'dic_cluster_total_input_idx_MOD_vs_node_info': {...}},
+            {'attribute_for_layer': Benzenoids, 'list_of_edge_for_networkx': [...], 'dic_cluster_total_input_idx_MOD_vs_node_info': {...}}, ...
+        ]
+    """
+    # making dataset for inner layer edges, node.
+    list_dic_edges_nodes_graph_by_layer = []
+    # for each layer. (inner edges, and related nodes...)
+    for attribute_for_layer in list_attribute_for_layer:
+        dic_edges_nodes_by_layer = {"attribute_for_layer": attribute_for_layer}
+        fo_log.write(f"\n-------- [attribute_for_layer] : {attribute_for_layer}")
+
+        # [EDGES]
+        # create list_od_edge for NetworkX for particular layer. -----------------------------------
+        list_of_edge_for_networkx_to_show_by_layer = []
+
+        for edge_for_networkx in list_of_edge_for_networkx:
+
+            # we are only looking for inner layer edge
+            if edge_for_networkx[2]["edge_type"] in ("inter_sample_ref_layer", "inter_ref_layer", "inter_sample_layer"):
+                continue
+
+            # if both node is on the layer,
+            if attribute_for_layer.startswith("sample"):
+                fo_log.write(
+                    f" \n attribute match 1:"
+                    f"---{dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[0]]['layer']}---"
+                    f" VS ---{attribute_for_layer}---")
+                fo_log.write(
+                    f" \n attribute match 2:"
+                    f"---{dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[1]]['layer']}---"
+                    f" VS ---{attribute_for_layer}---")
+
+            if (dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[0]]["layer"] == attribute_for_layer
+                    and dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[1]]["layer"] == attribute_for_layer):
+                fo_log.write(" \n MATCHED")
+                list_of_edge_for_networkx_to_show_by_layer.append(edge_for_networkx)
+                if attribute_for_layer.startswith("sample"):
+                    logger.debug("sample edge appended..........................")
+
+        dic_edges_nodes_by_layer["list_of_edge_for_networkx"] = list_of_edge_for_networkx_to_show_by_layer
+
+        fo_log.write("\n  for this layer:   dic_edges_nodes_by_layer[list_of_edge_for_networkx] "
+                     f"{len(list_of_edge_for_networkx_to_show_by_layer)}")
+        logger.info(f"For '{attribute_for_layer}' layer, length of list_of_edge_for_networkx: "
+                    f"{len(list_of_edge_for_networkx_to_show_by_layer)}")
+
+        # [NODES]
+        # create dic _cluster_total_input_idx_MOD_vs_node_info for each layer ------------------------
+        dic_cluster_total_input_idx_MOD_vs_node_info_by_layer = {}
+        for cluster_total_input_idx_MOD, node_info in dic_cluster_total_input_idx_MOD_vs_node_info.items():
+            if node_info["layer"] == attribute_for_layer:
+                dic_cluster_total_input_idx_MOD_vs_node_info_by_layer[cluster_total_input_idx_MOD] = node_info
+
+        dic_edges_nodes_by_layer["dic_cluster_total_input_idx_MOD_vs_node_info"] =\
+            dic_cluster_total_input_idx_MOD_vs_node_info_by_layer
+        list_dic_edges_nodes_graph_by_layer.append(dic_edges_nodes_by_layer)
+
+    return list_dic_edges_nodes_graph_by_layer
+
+
 def remove_node_edge_with_no_layer_attribute(config_o, dic_cluster_total_input_idx_MOD_vs_node_info,
                                              list_of_edge_for_networkx):
     #####################
@@ -1939,7 +2016,7 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     for total_input_idx_mod, node_o in dic_cluster_total_input_idx_MOD_vs_node_info.items():
         list_attribute_for_layer.append(node_o["layer"])
-        list_attribute_for_layer = list(set(list_attribute_for_layer))
+    list_attribute_for_layer = list(set(list_attribute_for_layer))
 
     fo_log.write("\n list_attribute_for_layer :" + str(list_attribute_for_layer))
     fo_log.flush()
@@ -1947,82 +2024,29 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     ###########################################
     # [J1]
-    # make "Graph by layer".   also isolate inter layer network (edges + layers))
+    # make "Graph by layer".
+    # also isolate inter layer network (edges + layers))
     ########################################
     logger.debug("[J1] making graph by layer")
-    # attribute_for_layer, list_of_edge_for_networkx, list_node_info_for_layer
+    list_dic_edges_nodes_graph_by_layer =\
+        make_edges_and_nodes_inner_layer(list_attribute_for_layer,
+                                         list_of_edge_for_networkx_to_show,
+                                         dic_cluster_total_input_idx_MOD_vs_node_info,
+                                         fo_log)
 
-    ##  making dataset for inner layer edges, node.
-    ##
-    list_dic_edges_nodes_graph_by_layer = []
-    # for each layer. (inner edges, and realate nodes...)
-    for attribute_for_layer in list_attribute_for_layer:
-        dic_edges_nodes_by_layer = {}
-        dic_edges_nodes_by_layer["attribute_for_layer"] = attribute_for_layer
-        fo_log.write("\n-------- [attribute_for_layer] : " + attribute_for_layer)
-
-        # [EDGES]
-        # create list_od_edge for newtorkx for particular layer. -----------------------------------
-        list_of_edge_for_networkx_to_show_by_layer = []
-
-        for edge_for_networkx in list_of_edge_for_networkx_to_show:
-
-            # we are only looking for inner layer edge
-            edge_for_networkx[2]["edge_type"] != "inter_sample_ref_layer"
-            # if both node is on thi layer,
-
-            if attribute_for_layer.startswith("sample"):
-                fo_log.write(" \n attribute match 1:" + "---" +
-                             dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[0]][
-                                 "layer"] + "---" + " VS " + "---" + attribute_for_layer + "---")
-                fo_log.write(" \n attribute match 2:" + "---" +
-                             dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[1]][
-                                 "layer"] + "---" + " VS " + "---" + attribute_for_layer + "---")
-
-            if dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[0]]["layer"] == attribute_for_layer \
-                    and dic_cluster_total_input_idx_MOD_vs_node_info[edge_for_networkx[1]][
-                "layer"] == attribute_for_layer:
-
-                fo_log.write(" \n MATCHEDDDD")
-                list_of_edge_for_networkx_to_show_by_layer.append(edge_for_networkx)
-                if attribute_for_layer.startswith("sample"):
-                    logger.debug("sample edge appendes..........................")
-        dic_edges_nodes_by_layer["list_of_edge_for_networkx"] = list_of_edge_for_networkx_to_show_by_layer
-
-        fo_log.write("\n  for this layer:   dic_edges_nodes_by_layer[list_of_edge_for_networkx] " + str(
-            len(list_of_edge_for_networkx_to_show_by_layer)))
-        logger.info(f"For '{attribute_for_layer}' layer, length of list_of_edge_for_networkx: "
-                    f"{len(list_of_edge_for_networkx_to_show_by_layer)}")
-
-        # [NODES]
-        #  create dic  _cluster_total_input_idx_MOD_vs_node_info for each layer ------------------------
-        dic_cluster_total_input_idx_MOD_vs_node_info_by_layer = {}
-        for cluster_total_input_idx_MOD, node_info in dic_cluster_total_input_idx_MOD_vs_node_info.items():
-            if node_info["layer"] == attribute_for_layer:
-                dic_cluster_total_input_idx_MOD_vs_node_info_by_layer[cluster_total_input_idx_MOD] = node_info
-
-        dic_edges_nodes_by_layer[
-            "dic_cluster_total_input_idx_MOD_vs_node_info"] = dic_cluster_total_input_idx_MOD_vs_node_info_by_layer
-        list_dic_edges_nodes_graph_by_layer.append(dic_edges_nodes_by_layer)
-
-    fo_log.write(
-        "\n\n\n  list_dic_edges_nodes_graph_by_layer " + str(len(list_dic_edges_nodes_graph_by_layer)) + "\n\n\n")
+    fo_log.write(f"\n\n\n  list_dic_edges_nodes_graph_by_layer {len(list_dic_edges_nodes_graph_by_layer)}\n\n\n")
     logger.info(f'length of list_dic_edges_nodes_graph_by_layer: {len(list_dic_edges_nodes_graph_by_layer)}')
-    logger.debug(f"len list_dic_edges_nodes_graph_by_layer: {str(len(list_dic_edges_nodes_graph_by_layer))}")
-    fo_log.write("\n [Graph by layer]       len list_dic_edges_nodes_graph_by_layer" + str(
-        len(list_of_edge_for_networkx_to_show_by_layer)))
-    logger.info(f'[Graph by layer] length of list_dic_edges_nodes_graph_by_layer: '
-                f'{len(list_of_edge_for_networkx_to_show_by_layer)}')
+    logger.debug(f"len list_dic_edges_nodes_graph_by_layer: {len(list_dic_edges_nodes_graph_by_layer)}")
 
     fo_log_key.write("\n\n*end of main [J1] (making list_dic_edges_nodes_graph_by_layer )")
-    log_message = f'End of main [J1] (making list_dic_edges_nodes_graph_by_layer )' \
-                  f'\nattribute_for_layer\tlength of dic_cluster_total_input_idx_MOD_vs_node_info' \
-                  f'\tlength of list_of_edge_for_networkx'
+    log_message = 'End of main [J1] (making list_dic_edges_nodes_graph_by_layer )' \
+                  '\nattribute_for_layer\tlength of dic_cluster_total_input_idx_MOD_vs_node_info' \
+                  '\tlength of list_of_edge_for_networkx'
     for dic in list_dic_edges_nodes_graph_by_layer:
         fo_log_key.write(
-            "\n" + dic["attribute_for_layer"] + " : " + "dic_cluster_total_input_idx_MOD_vs_node_info:" + str(
-                len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])) \
-            + ",    list_of_edge_for_networkx: " + str(len(dic["list_of_edge_for_networkx"])))
+            f'\n{dic["attribute_for_layer"]} : dic_cluster_total_input_idx_MOD_vs_node_info:'
+            f'{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])},    '
+            f'list_of_edge_for_networkx: {len(dic["list_of_edge_for_networkx"])}')
 
         log_message += f'\n{dic["attribute_for_layer"]}\t{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}' \
                        f'\t{len(dic["list_of_edge_for_networkx"])}'
@@ -2030,14 +2054,14 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     #################################################################
     # [L1]
-    ## making dataset for "INTER  SAMPLE VS REF  LAYER"  and "INTER SAMPLE" dataset.--------------------------------
+    # making dataset for "INTER  SAMPLE VS REF  LAYER"  and "INTER SAMPLE" dataset.--------------------------------
     fo_log_key.write("\n\n [L1 ]making dataset for INTER  SAMPLE VS REF  LAYER  and INTER SAMPLE dataset")
     logger.debug("[L1] making dataset for inter sample vs ref layer  and inter sample dataset")
     logger.info("[L1] making dataset for inter sample vs ref layer  and inter sample dataset")
     list_dic_edges_nodes_inter_layer = []
 
     # [EDGES]
-    # create list_od_edge for newtorkx for particular layer. -----------------------------------
+    # create list_od_edge for NetworkX for particular layer. -----------------------------------
     list_of_edge_for_networkx_to_show_inter_sample_ref_layer = []
     list_of_edge_for_networkx_to_show_inter_sample_layer = []
     # this list keeps total_input_idx_MOD for "inter sample ref layer"
