@@ -64,3 +64,49 @@ def create_networkx_graph(dic_cluster_total_input_idx_MOD_vs_node_info: dict, li
     logger.debug("finishing  [create_networkx_graph]")
 
     return FG
+
+
+def create_sample_networkx_graph(list_dic_edges_nodes_graph_by_layer: list,
+                                 list_of_edge_for_networkx_inter_sample_layer: list,
+                                 fo_log):
+    """
+
+    Parameters
+    ----------
+    list_dic_edges_nodes_graph_by_layer : list
+    list_of_edge_for_networkx_inter_sample_layer : list
+    fo_log : file object
+
+    Returns
+    -------
+    FG_all_samples : networkx.Graph
+    """
+    # first, assemble all nodes, edges from sample tag containing dataset
+    dic_cluster_total_input_idx_MOD_vs_node_info_all_samples = {}
+    list_of_edge_for_networkx_all_samples = []
+
+    for dic in list_dic_edges_nodes_graph_by_layer:
+        # dealing with sample layer data.
+        # note if you have more than 1, you have to merge and make layout for the merged dataset.
+        if dic["attribute_for_layer"].startswith("sample"):
+            fo_log.write(f'\n\niterating : {dic["attribute_for_layer"]}')
+            fo_log.write("\ndic[dic_cluster_total_input_idx_MOD_vs_node_info]: "
+                         f'{dic["dic_cluster_total_input_idx_MOD_vs_node_info"]}')
+            fo_log.write(f'\ndic[list_of_edge_for_networkx]: {dic["list_of_edge_for_networkx"]}')
+            logger.info(f'Iterating: {dic["attribute_for_layer"]}\n'
+                        f'\ndic["dic_cluster_total_input_idx_MOD_vs_node_info"]: '
+                        f'{dic["dic_cluster_total_input_idx_MOD_vs_node_info"]}'
+                        f'\ndic[list_of_edge_for_networkx]: {dic["list_of_edge_for_networkx"]}')
+
+            dic_cluster_total_input_idx_MOD_vs_node_info_all_samples.update(
+                dic["dic_cluster_total_input_idx_MOD_vs_node_info"])
+            list_of_edge_for_networkx_all_samples += dic["list_of_edge_for_networkx"]
+    list_of_edge_for_networkx_all_samples += list_of_edge_for_networkx_inter_sample_layer
+    fo_log.write(f"\n\nlist_of_edge_for_networkx_all_samples: {list_of_edge_for_networkx_all_samples}")
+    logger.info(f'list_of_edge_for_networkx_all_samples: {list_of_edge_for_networkx_all_samples}')
+
+    # just converting to networkx graph.  doing nothing with subgraph etc.
+    FG_all_samples = create_networkx_graph(dic_cluster_total_input_idx_MOD_vs_node_info_all_samples,
+                                           list_of_edge_for_networkx_all_samples)
+
+    return FG_all_samples
