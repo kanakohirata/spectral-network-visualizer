@@ -187,6 +187,10 @@ class GetNetworkData(generic.TemplateView):
             config['mass_lower_limit'] = float(request.POST.get('mass_lower_limit'))
         if request.POST.get('mass_higher_limit'):
             config['mass_higher_limit'] = float(request.POST.get('mass_higher_limit'))
+        if request.POST.get('community_detection_level') == 'true':
+            config['n_level_community_detection'] = 1
+        else:
+            config['n_level_community_detection'] = 0
         if request.POST.get('filter_select_category'):
             config['filter_select_category'] = request.POST.get('filter_select_category')
         if request.POST.get('filter_select_keyword'):

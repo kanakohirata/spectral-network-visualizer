@@ -73,6 +73,12 @@ class BasicParameterForm(CustomParameterForm):
     mass_higher_limit = forms.FloatField(label='Mass higher threshold', min_value=0,
                                          widget=forms.NumberInput(attrs={'step': 0.0001, 'placeholder': 'default=1000'}))
 
+    # community_detection_level is supposed to be an integer.
+    # However, since only the greedy_modularity_communities method is currently used for community detection,
+    # a Boolean value is instead used for that.
+    # When the girvan_newman method becomes available in the future, an integer value should be obtained.
+    community_detection_level = forms.BooleanField(label='Perform community detection')
+
 
 class QuantitativeParameterForm(CustomParameterForm):
     feature_file = forms.FileField(label='Feature File', widget=forms.FileInput(),
