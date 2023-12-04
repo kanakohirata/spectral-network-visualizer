@@ -148,6 +148,9 @@ def read_cluster_attribute(path):
     # Correct retention time data.
     if flag_present_retention_time_in_sec:
         df_cluster_info.rename(inplace=True, columns={'RETENTION_TIME_IN_SEC': 'retention_time_in_sec'})
+        df_cluster_info['retention_time_in_sec'] = df_cluster_info['retention_time_in_sec'].astype(str)
+        df_cluster_info['retention_time_in_sec'] =\
+            df_cluster_info['retention_time_in_sec'].apply(lambda x: 0.0 if not re.match(r'\d+\.?\d+', x) else x)
         df_cluster_info['retention_time_in_sec'] = df_cluster_info['retention_time_in_sec'].fillna(0.0)
     else:
         df_cluster_info['retention_time_in_sec'] = 0.0
@@ -162,6 +165,9 @@ def read_cluster_attribute(path):
     df_cluster_info['inchi_key_first'] = df_cluster_info['inchi_key'].apply(lambda x: x.split('-')[0])
 
     # Fill precursor m/z and retention time.
+    df_cluster_info['precursor_mz'] = df_cluster_info['precursor_mz'].astype(str)
+    df_cluster_info['precursor_mz'] =\
+        df_cluster_info['precursor_mz'].apply(lambda x: 0.0 if not re.match(r'\d+\.?\d+', x) else x)
     df_cluster_info['precursor_mz'] = df_cluster_info['precursor_mz'].fillna(0.0)
     df_cluster_info[['precursor_mz', 'retention_time_in_sec']]\
         = df_cluster_info[['precursor_mz', 'retention_time_in_sec']].astype({'precursor_mz': float, 'retention_time_in_sec': float})

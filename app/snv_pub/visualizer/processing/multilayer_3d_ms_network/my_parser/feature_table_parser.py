@@ -75,6 +75,7 @@ def read_quantitative_table(path):
     df['feature_id'] = ''
     df['dic_area'] = [{}, ] * len(df)
     df = df[['global_accession', 'feature_id', 'dic_area', 'value_to_show', 'stat_val']]
+    df.set_index('global_accession', inplace=True, drop=False)
 
     dic_mf = df.to_dict(orient='index')
     logger.debug("read_quantitative_table() FINISHED")
