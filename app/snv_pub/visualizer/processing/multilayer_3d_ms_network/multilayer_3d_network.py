@@ -22,6 +22,7 @@ from .my_parser.feature_table_parser import read_feature_table
 from .networking import (create_networkx_graph,
                          create_quantitative_subgraph,
                          create_sample_networkx_graph,
+                         define_layers,
                          extract_ref_subgraph_based_on_total_input_idx,
                          extract_ref_subgraph_in_external_compounds,
                          extract_subgraph_based_on_sample_global_accession,
@@ -143,61 +144,6 @@ def threshold_edges(score_threshold, list_of_edge_for_networkx):
 
     logger.debug("Finished function [threshold_edges] ")
     return list_of_edge_for_networkx_new, list_node_total_input_idx_mod_in_use
-
-
-def define_layers(dic_config, dic_cluster_total_input_idx_MOD_vs_node_info):
-    logger.debug("starting [define_layers]")
-    list_attribute_for_layer = []
-
-    #########################
-    #  iterate list of node and add node with attribute
-    #################################
-
-    for total_input_idx_mod, node_info in dic_cluster_total_input_idx_MOD_vs_node_info.items():
-        list_attribute_for_layer.append(node_info["layer"])
-        list_attribute_for_layer = list(set(list_attribute_for_layer))
-
-    logger.debug(f"list_attribute_for_layer {list_attribute_for_layer}")
-
-    ######################################################
-    # [V]Now  list_attribute_for_layer  contains all attribute for LAYER SEPARATION.
-    #  define layer based on the attributes
-
-    # but first you want to define base layer
-    # Tell which attribute is used to specify base layer.
-    #  if  your base layer spectra has not CMPD_CLASSIFICATION_SUPERCLASS description, use    str_key_attribute_to_base_layer = '[]'
-
-    # you want to remove base layer key from list.
-
-    if (dic_config["str_key_attribute_to_base_layer"] in list_attribute_for_layer):
-        list_attribute_for_layer.remove(dic_config["str_key_attribute_to_base_layer"])
-
-    # create dictionary where key is str of attribute ['organic compound'] and value is layer_id
-    dic_attribute_for_layer_vs_layer_id = {}
-
-    #####!!!!!!!!!!!!!!!!   here you are making "sample"layer....
-    dic_attribute_for_layer_vs_layer_id[dic_config["str_key_attribute_to_base_layer"]] = 0
-
-    for n in range(0, len(list_attribute_for_layer)):
-        # it needs to be n+1 since 0 is for base layer you already created
-        dic_attribute_for_layer_vs_layer_id[list_attribute_for_layer[n]] = n + 1
-
-    # make switched version
-    dic_layer_id_vs_attribute_for_layer = {}
-
-    for k, v in dic_attribute_for_layer_vs_layer_id.items():
-        dic_layer_id_vs_attribute_for_layer[v] = k
-
-    logger.warning(f'dic_layer_id_vs_attribute_for_layer: {dic_layer_id_vs_attribute_for_layer}')
-
-    # for node in FG.nodes(data= True):
-    #    node[1]['layer_id'] = dic_attribute_for_layer_vs_layer_id[     node[1]['attribute_for_layer'] ]
-
-    logger.debug(f"list_attribute_for_layer {list_attribute_for_layer}")
-
-    logger.debug("finishing [define_layer]")
-    # return FG, dic_layer_id_vs_attribute_for_layer
-    return dic_layer_id_vs_attribute_for_layer
 
 
 def export_current_edges(conf, list_dic_edges_nodes_graph_by_layer, \
@@ -1555,32 +1501,13 @@ def process_3d_network_data(dic_source_data, dic_config):
     ########################
     logger.debug("starting [combine subgraph and upper layer]")
 
-    ###
-    # forcebly show nodes in upper layer EVEN IF the nodes are not connected to sample layer
-    flag_show_all_upper = 0
-
-    if flag_show_all_upper == 1:
-        FG = nx.compose_all([FG, FG_upper])
-
-    fo_log.write("AFTER COMPOSE FG.number_of_nodes()" + str(FG.number_of_nodes()) + "\n")
-    fo_log.flush()
-    logger.info(f'AFTER COMPOSE FG.number_of_nodes(): {FG.number_of_nodes()}')
-
-    # make list of edges and nodes acutally used.-----------------------
-    list_node_total_input_idx_mod_in_use = []
-    for node in FG.nodes.data():
-        list_node_total_input_idx_mod_in_use.append(node[0])
-
-    l_edges_in_use = []
-    for edge in FG.edges.data():
-        l_edges_in_use.append((edge[0], edge[1]))
-
     ###################################
     # get layer attributes
     #####################################
 
     logger.debug("define layer")
-    dic_layer_id_vs_attribute_for_layer = define_layers(dic_config, dic_cluster_total_input_idx_MOD_vs_node_info)
+    dic_layer_id_vs_attribute_for_layer = define_layers(dic_config["str_key_attribute_to_base_layer"],
+                                                        dic_cluster_total_input_idx_MOD_vs_node_info)
     logger.debug("finished to define layer")
     fo_log.write("\n dic_layer_id_vs_attribute_for_layer " + str(dic_layer_id_vs_attribute_for_layer) + "\n")
     fo_log.flush()
@@ -1598,7 +1525,7 @@ def process_3d_network_data(dic_source_data, dic_config):
     ####################################
     # Main [Q] get layout, 2D
     ######################################
-    fo_log_key.write("\n\n beggining of main [Q]")
+    fo_log_key.write("\n\n beginning of main [Q]")
     log_message = f'Beginning of main [Q]\nattribute_for_layer\tlength of dic_cluster_total_input_idx_MOD_vs_node_info' \
                   f'\tlength of list_of_edge_for_networkx'
     for dic in list_dic_edges_nodes_graph_by_layer:
@@ -1611,20 +1538,6 @@ def process_3d_network_data(dic_source_data, dic_config):
     logger.info(log_message)
 
     logger.debug("[multilayer_3d_network_b1/process_3d_network_data]  start getting layout, 2D ")
-    ##  Layout for sample\\\\======================================================
-
-    # first, assemble all nodes, edges from "sample tag" containing dataset-----------------------
-    dic_cluster_total_input_idx_MOD_vs_node_info_all_samples = {}
-    list_of_edge_for_networkx_all_samples = []
-
-    for dic in list_dic_edges_nodes_graph_by_layer:
-        # dealing with sample layer data.
-        # note if you have more than 1, you have to merge and make layout for the merged datast.
-        if dic["attribute_for_layer"].startswith("sample_"):
-            dic_cluster_total_input_idx_MOD_vs_node_info_all_samples.update(
-                dic["dic_cluster_total_input_idx_MOD_vs_node_info"])
-            list_of_edge_for_networkx_all_samples = list_of_edge_for_networkx_all_samples + dic[
-                "list_of_edge_for_networkx"]
 
     fo_x = open("logx.txt", "w")
     fo_x.write(str(len(list_of_edge_for_networkx_to_show_inter_sample_layer)) + "\n")

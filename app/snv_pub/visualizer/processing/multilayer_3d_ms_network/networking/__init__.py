@@ -1,5 +1,6 @@
 from .create_networkx_graph import create_networkx_graph, create_sample_networkx_graph
 from .create_quantitative_subgraph import create_quantitative_subgraph
+from .define_layers import define_layers
 from .extract_subgraph import (extract_ref_subgraph_based_on_total_input_idx,
                                extract_ref_subgraph_in_external_compounds,
                                extract_subgraph_based_on_sample_global_accession)
