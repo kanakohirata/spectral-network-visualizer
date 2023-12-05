@@ -29,7 +29,8 @@ from .networking import (create_networkx_graph,
                          make_edges_and_nodes_inner_layer,
                          make_edges_and_nodes_inter_layer,
                          make_list_of_edge_for_networkx,
-                         perform_community_detection)
+                         perform_community_detection,
+                         update_edges)
 from .utils import (add_color_to_t3db_compound,
                     add_suspect_compound_info)
 
@@ -1517,9 +1518,9 @@ def process_3d_network_data(dic_source_data, dic_config):
                   f'\tlength of list_of_edge_for_networkx'
     for dic in list_dic_edges_nodes_graph_by_layer:
         fo_log_key.write(
-            "\n" + dic["attribute_for_layer"] + " : " + "dic_cluster_total_input_idx_MOD_vs_node_info:" + str(
-                len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])) \
-            + ",    list_of_edge_for_networkx: " + str(len(dic["list_of_edge_for_networkx"])))
+            f'\n{dic["attribute_for_layer"]} : '
+            f'dic_cluster_total_input_idx_MOD_vs_node_info:{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}'
+            f',    list_of_edge_for_networkx: {len(dic["list_of_edge_for_networkx"])}')
         log_message += f'\n{dic["attribute_for_layer"]}\t{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}' \
                        f'\t{len(dic["list_of_edge_for_networkx"])}'
     logger.info(log_message)
@@ -1534,55 +1535,20 @@ def process_3d_network_data(dic_source_data, dic_config):
     # takeover
     list_dic_edges_nodes_graph_by_layer = list_dic_edges_nodes_graph_by_layer_update
 
-    #####################
-    ######################
-    #  pick up interlayer edges that fits sugraph
-    ################################
-    logger.debug("[multilayer_3d_network_b1/process_3d_network_data]  [N1z] pick up interlayer edges that fits sugraph")
+    ###############################################
+    #  pick up interlayer edges that fits subgraph
+    ###############################################
+    logger.debug("[multilayer_3d_network_b1/process_3d_network_data]  [N1z] pick up interlayer edges that fits subgraph")
 
-    l_cluster_total_input_idx_MOD_in_sample_subgraph = []
-    l_cluster_total_input_idx_MOD_in_all_subgraph = []
-    # foe each layer
-    for dic_edges_nodes_graph_by_layer in list_dic_edges_nodes_graph_by_layer:
-        # if the current layer is sample
-        for cluster_total_input_idx_MOD, v in dic_edges_nodes_graph_by_layer[
-            "dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-            l_cluster_total_input_idx_MOD_in_all_subgraph.append(cluster_total_input_idx_MOD)
+    list_of_edge_for_networkx_to_show_inter_sample_ref_layer, list_of_edge_for_networkx_to_show_inter_sample_layer =\
+        update_edges(list_dic_edges_nodes_graph_by_layer,
+                     list_of_edge_for_networkx_to_show_inter_sample_ref_layer,
+                     list_of_edge_for_networkx_to_show_inter_sample_layer)
 
-    # get edges both nodes can be founc in current subgraph:
-    list_of_inter_sample_ref_edge_tb_used = []
-    for edge_for_networkx in list_of_edge_for_networkx_to_show_inter_sample_ref_layer:
-
-        # if edge_for_networkx[0] in l_cluster_total_input_idx_MOD_in_sample_subgraph or  edge_for_networkx[1] in l_cluster_total_input_idx_MOD_in_sample_subgraph:
-        if edge_for_networkx[0] in l_cluster_total_input_idx_MOD_in_all_subgraph and edge_for_networkx[
-            1] in l_cluster_total_input_idx_MOD_in_all_subgraph:
-            list_of_inter_sample_ref_edge_tb_used.append(edge_for_networkx)
-
-    # take over
-    list_of_edge_for_networkx_to_show_inter_sample_ref_layer = list_of_inter_sample_ref_edge_tb_used
-
-    fo_log.write("list_of_edge_for_networkx_to_show_inter_sample_ref_layer \n" + str(
-        list_of_edge_for_networkx_to_show_inter_sample_ref_layer) + "\n")
+    fo_log.write("list_of_edge_for_networkx_to_show_inter_sample_ref_layer \n"
+                 f"{list_of_edge_for_networkx_to_show_inter_sample_ref_layer}\n")
     logger.info(f'list_of_edge_for_networkx_to_show_inter_sample_ref_layer: '
                 f'{list_of_edge_for_networkx_to_show_inter_sample_ref_layer}')
-
-    list_of_inter_sample_edge_tb_used = []
-    for edge_for_networkx in list_of_edge_for_networkx_to_show_inter_sample_layer:
-        if edge_for_networkx[0] in l_cluster_total_input_idx_MOD_in_all_subgraph and edge_for_networkx[
-            1] in l_cluster_total_input_idx_MOD_in_all_subgraph:
-            list_of_inter_sample_edge_tb_used.append(edge_for_networkx)
-
-    # take over
-    list_of_edge_for_networkx_to_show_inter_sample_layer = list_of_inter_sample_edge_tb_used
-
-    ### for node dictionary
-    dic_cluster_total_input_idx_MOD_vs_node_info_tb_used = {}
-    for cluster_total_input_idx_MOD, node_info in dic_cluster_total_input_idx_MOD_vs_node_info_inter_sample_ref_layer.items():
-
-        if cluster_total_input_idx_MOD in l_cluster_total_input_idx_MOD_in_sample_subgraph:
-            dic_cluster_total_input_idx_MOD_vs_node_info_tb_used[cluster_total_input_idx_MOD] = node_info
-    # take over -----
-    dic_cluster_total_input_idx_MOD_vs_node_info_inter_sample_ref_layer = dic_cluster_total_input_idx_MOD_vs_node_info_tb_used
 
     ########################
     # combine subgraph  and upper layer
@@ -1628,183 +1594,6 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     ############
     # list_dictionary     upper,   FG
-
-    """
-
-    ################################
-    # [O] community detection
-    print ("[O]staring community detection ")
-
-
-    fo_log_key.write("\n\n beggining of community detection [O]")
-    for dic in list_dic_edges_nodes_graph_by_layer:
-        fo_log_key.write(  "\n" +  dic["attribute_for_layer"] + " : " +   "dic_cluster_total_input_idx_MOD_vs_node_info:" +  str(len( dic["dic_cluster_total_input_idx_MOD_vs_node_info"] )) \
-                +   ",    list_of_edge_for_networkx: "   +  str(len(dic["list_of_edge_for_networkx"]))       )
-
-
-
-
-    from networkx.readwrite import json_graph
-    from networkx.algorithms import community
-    import json
-
-    str_log =  "\n\nCommunity detection==============="  + "\n"
-    #####
-    # [O1] first,  combine all nodes, edges ---------------------------------
-    print ("  [O1] combine all nodes, edges ")
-    G_all_combined = nx.Graph()
-
-    # combine node/edges for each layers. (not inter layer edges)
-    for dic_edges_nodes_graph_by_layer in list_dic_edges_nodes_graph_by_layer:
-        G_all_combined = nx.compose(G_all_combined, dic_edges_nodes_graph_by_layer["nx_graph"])
-
-    # add inter sample-ref edges
-    G_all_combined.add_edges_from(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)
-
-    # add inter sample-ref edges
-    G_all_combined.add_edges_from(list_of_edge_for_networkx_to_show_inter_sample_layer)
-
-
-
-    # [O3] Perform community detection ----------------------------------------------
-    print ("  [O3] Perform community detection")
-
-
-    print("  [O3] community generator created ")
-    n_level_community_detection = 1
-
-
-    if n_level_community_detection > 0 :
-        l_communities = []
-        community_detection_method = "greedy_modularity_communities"
-
-
-        if community_detection_method == "girvan_newman":
-            communities_generator = community.girvan_newman(G_all_combined)
-            # return as tuple
-            for n in range(n_level_community_detection):
-                l_communities = next(communities_generator)
-
-        if community_detection_method == "greedy_modularity_communities":
-            from networkx.algorithms.community import greedy_modularity_communities
-            try :
-                l_communities = list(greedy_modularity_communities(G_all_combined))
-            except:
-                pass
-
-
-        print("  [O3] community detection finished")
-
-
-        if len( l_communities) > 0 :
-
-            str_log = str_log + "\n detected communities \n"
-            for c in l_communities:
-                str_log = str_log + "\n"  +str(c)
-
-                # [O5]  check all the edges whether it fits community definition -----------------
-
-            # this holds edges that do not fit within community.  in other word, inter community edges
-            l_inter_community_edge_as_tuple = []
-
-            # iterate edges----------------------
-            for u, v, d in G_all_combined.edges(data=True):
-                f_in_community = 0
-                # iterate communities
-                for commu in l_communities:
-                    if all(x in commu for x in [u, v]):
-                        f_in_community = 1
-                # if the current edge is not inside community,
-                if f_in_community == 0:
-                    l_inter_community_edge_as_tuple.append((u, v, d))
-
-            print("inter-community edges", l_inter_community_edge_as_tuple)
-            str_log = str_log + "\n inter-community edges "    +    str(len(l_inter_community_edge_as_tuple)) + "\n"
-
-            fo_log_key.write(str_log)
-            fo_log_key.flush()
-
-            # [O7]: update edge info-------------------------------------------------------------------
-            print("  [O7]  update edge info")
-            # for each layer.  (list_dic_edges_nodes_graph_by_layer)
-            for dic_edges_nodes_graph_by_layer in list_dic_edges_nodes_graph_by_layer :
-                l_inter_community_edge = []
-                # list of edge within community, which supposed to be preserved.
-                l_inner_community_edge = []
-                # iterate edges
-                for edge in dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"]:
-                    f_in_community = 0
-                    # check the edge is in community.
-                    for commu in l_communities:
-                        if all(x in commu for x in [edge[0], edge[1]]):
-                            l_inner_community_edge.append((edge[0], edge[1], edge[2]))
-                            f_in_community = 1
-
-                    if f_in_community == 0:
-                        l_inter_community_edge.append((edge[0], edge[1], edge[2]))
-
-                dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"]= l_inner_community_edge
-                # it seems you need to unfrozen graph
-                nx_graph_unfrozen =    nx.Graph(dic_edges_nodes_graph_by_layer["nx_graph"])
-                # then remove edge.
-                nx_graph_unfrozen.remove_edges_from(l_inter_community_edge)
-                dic_edges_nodes_graph_by_layer["nx_graph"] = nx_graph_unfrozen
-
-                #log
-                str_log =  str_log  + "layer attribute: " + dic_edges_nodes_graph_by_layer["attribute_for_layer"] + "\n"
-                str_log = str_log + " num edges removed (in community detection mode: do not belong to community): " +  str(len(l_inter_community_edge))+ "\n"
-
-
-            #    remove inter community edges for list_of_edge_for_networkx_to_show_inter_sample_ref_layer
-            l_inner_community_edge_inter_sample_ref_layer = []
-            l_inter_community_edge_inter_sample_ref_layer = []
-            for edge in list_of_edge_for_networkx_to_show_inter_sample_ref_layer:
-                f_in_community = 0
-                # check the edge is in community.
-                for commu in l_communities:
-                    if all(x in commu for x in [edge[0], edge[1]]):
-                        l_inner_community_edge_inter_sample_ref_layer.append((edge[0], edge[1], edge[2]))
-                        f_in_community = 1
-
-                if f_in_community == 0:
-                    l_inter_community_edge_inter_sample_ref_layer.append((edge[0], edge[1], edge[2]))
-            # take over
-            list_of_edge_for_networkx_to_show_inter_sample_ref_layer =  l_inner_community_edge_inter_sample_ref_layer
-
-
-
-            #   remove inter community edges  for list_of_edge_for_networkx_to_show_inter_sample_layer
-            l_inner_community_edge_inter_sample_layer = []
-            l_inter_community_edge_inter_sample_layer = []
-            for edge in list_of_edge_for_networkx_to_show_inter_sample_layer:
-                f_in_community = 0
-                # check the edge is in community.
-                for commu in l_communities:
-                    if all(x in commu for x in [edge[0], edge[1]]):
-                        l_inner_community_edge_inter_sample_layer.append((edge[0], edge[1], edge[2]))
-                        f_in_community = 1
-
-                if f_in_community == 0:
-                    l_inter_community_edge_inter_sample_layer.append((edge[0], edge[1], edge[2]))
-            # take over
-            list_of_edge_for_networkx_to_show_inter_sample_layer =  l_inner_community_edge_inter_sample_layer
-
-
-
-
-        ## export
-
-        data1 = json_graph.node_link_data(G_all_combined)
-        fp = open("(G_all_combined.json", "w")
-        json.dump(data1, fp)
-
-        print(" Finishing community detection")
-
-
-
-    #  end community detection
-
-    """
 
     ####################################
     # Main [Q] get layout, 2D
