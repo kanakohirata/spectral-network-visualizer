@@ -22,7 +22,7 @@ from .my_parser.feature_table_parser import read_feature_table
 from .networking import (create_networkx_graph,
                          create_quantitative_subgraph,
                          create_sample_networkx_graph,
-                         extract_ref_subgraph_connected_to_sample,
+                         extract_ref_subgraph_based_on_total_input_idx,
                          extract_ref_subgraph_in_external_compounds,
                          extract_subgraph_based_on_sample_global_accession,
                          locate_nodes_to_layers_and_update_edges,
@@ -1454,17 +1454,16 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     if f_preserve_only_ref_node_inter_layer_connected > 0:
         list_dic_edges_nodes_graph_by_layer =\
-            extract_ref_subgraph_connected_to_sample(list_dic_edges_nodes_graph_by_layer,
-                                                     list_total_input_idx_MOD_inter_sample_ref_layer,
-                                                     depth_ref_preserve_interlayer)
+            extract_ref_subgraph_based_on_total_input_idx(list_dic_edges_nodes_graph_by_layer,
+                                                          list_total_input_idx_MOD_inter_sample_ref_layer,
+                                                          depth_ref_preserve_interlayer)
 
     #########################################################
     # This is for extracting compounds and related, BASED ON EXTERNAL CMPD INFO
-
+    # !!!!!!!!!!!!!!!! tempo
+    ref_subgraph_depth = 3
     # if "external compound info" is selected to make subgraph
     if dic_config.get("ref_filter_ext") == "ext_cmpd_info":
-        # !!!!!!!!!!!!!!!! tempo
-        ref_subgraph_depth = 3
         list_dic_edges_nodes_graph_by_layer =\
             extract_ref_subgraph_in_external_compounds(list_dic_edges_nodes_graph_by_layer, ref_subgraph_depth)
 
@@ -1472,15 +1471,12 @@ def process_3d_network_data(dic_source_data, dic_config):
     # ref layer subgraph extraction 2.
     # this time, based on ref layer subgraph connected to "usr specified" node.
 
-    fo_log.write("\n\nlen of l_total_input_idx_mod_ref_for_subgraph_base : " + str(
-        len(l_total_input_idx_mod_ref_for_subgraph_base)) + "\n")
-
-    fo_log_key.write("\n\nlen of l_global_accession_for_subgraph_sample_user_selected : " + str(
-        len(l_global_accession_for_subgraph_sample_user_selected)) + "\n")
-
-    fo_log_key.write("\n\nlen of l_total_input_idx_mod_ref_for_subgraph_base : " + str(
-        len(l_total_input_idx_mod_ref_for_subgraph_base)) + "\n")
-
+    fo_log.write("\n\nlen of l_total_input_idx_mod_ref_for_subgraph_base : "
+                 f"{len(l_total_input_idx_mod_ref_for_subgraph_base)}\n")
+    fo_log_key.write("\n\nlen of l_global_accession_for_subgraph_sample_user_selected : "
+                     f"{len(l_global_accession_for_subgraph_sample_user_selected)}\n")
+    fo_log_key.write("\n\nlen of l_total_input_idx_mod_ref_for_subgraph_base : "
+                     f"{len(l_total_input_idx_mod_ref_for_subgraph_base)}\n")
     fo_log_key.flush()
 
     logger.info(f'Length of l_total_input_idx_mod_ref_for_subgraph_base: '
@@ -1489,94 +1485,30 @@ def process_3d_network_data(dic_source_data, dic_config):
                 f'{len(l_global_accession_for_subgraph_sample_user_selected)}')
 
     f_show_all_ref = 0
-    # doing ref layer extraction only if sugraph mode is ON for sample.
+    # doing ref layer extraction only if subgraph mode is ON for sample.
     if len(l_global_accession_for_subgraph_sample_user_selected) > 0:
 
         fo_log_key.write("\n performing ref layer subgraph 2 creation (user specified node)\n")
         logger.info('Performing ref layer subgraph 2 creation (user specified node)')
-        # if len(l_total_input_idx_mod_ref_for_subgraph_base) > 0 :
-
-        # this empty list will keep data for each layer to be kept
-        list_dic_edges_nodes_graph_by_layer_update = []
 
         fo_log.write(
-            "\n\n l_total_input_idx_mod_ref_for_subgraph_base:" + str(l_total_input_idx_mod_ref_for_subgraph_base))
+            f"\n\n l_total_input_idx_mod_ref_for_subgraph_base:{l_total_input_idx_mod_ref_for_subgraph_base}")
         logger.info(f'l_total_input_idx_mod_ref_for_subgraph_base: {l_total_input_idx_mod_ref_for_subgraph_base}')
 
         # look for ref layer--------------------------------
-        for n in range(len(list_dic_edges_nodes_graph_by_layer)):
-            dic_edges_nodes_graph_by_layer = list_dic_edges_nodes_graph_by_layer[n]
-            f_do_extraction = 0
-            # sample layer data will be just passed.
-            if dic_edges_nodes_graph_by_layer["attribute_for_layer"].startswith("sample"):
-                list_dic_edges_nodes_graph_by_layer_update.append(dic_edges_nodes_graph_by_layer)
-
-            # dealing with ref layer
-            if not dic_edges_nodes_graph_by_layer["attribute_for_layer"].startswith("sample"):
-
-                ### !!!!!!!!!!! TO DO FIX
-                ref_subgraph_depth = 3
-                base = []
-                nx_graph = dic_edges_nodes_graph_by_layer["nx_graph"]
-
-                # iterate node and get corresponding node to extract.
-                for node in nx_graph.nodes(data=True):
-                    fo_log.write("\n node" + str(node) + str(type(node)))
-                    logger.info(f'Node {node}')
-                    if node[0] in l_total_input_idx_mod_ref_for_subgraph_base:
-                        base.append(node[0])
-
-                fo_log.write("\n\nref sugraph base" + str(base))
-                logger.info(f'Ref subgraph base {base}')
-
-                if len(base) > 0:
-                    foundset = {key for source in base for key in
-                                list(nx.single_source_shortest_path(nx_graph, source,
-                                                                    cutoff=ref_subgraph_depth).keys())}
-                    # update and replace nx graph and other info
-                    nx_graph_sub = nx_graph.subgraph(foundset)
-                    dic_edges_nodes_graph_by_layer["nx_graph"] = nx_graph_sub
-
-                    # create list of edges again.  nx.generate_edgelist  not really working ???
-                    list_of_edge_for_networkx_sub = []
-                    for e in nx_graph_sub.edges.data():
-                        list_of_edge_for_networkx_sub.append([e[0], e[1], e[2]])
-                    # update_edges
-                    dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"] = list_of_edge_for_networkx_sub
-
-                    # updating "dic_cluster_total_input_idx_MOD_vs_node_info"-----------------------------
-
-                    # this has total input idx mod PRESENT in subgraph
-                    l_total_input_idx_mod_IN_subgraph = []
-
-                    for node in nx_graph_sub.nodes(data=True):
-                        l_total_input_idx_mod_IN_subgraph.append(node[0])
-                    dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE = {}
-                    for cluster_total_input_idx_MOD, node_info in dic_edges_nodes_graph_by_layer[
-                        "dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-
-                        if cluster_total_input_idx_MOD in l_total_input_idx_mod_IN_subgraph:
-                            dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE[
-                                cluster_total_input_idx_MOD] = node_info
-
-                    dic_edges_nodes_graph_by_layer[
-                        "dic_cluster_total_input_idx_MOD_vs_node_info"] = dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE
-
-                    if len(dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE) > 0:
-                        fo_log.write("\nappending ref sugraph " + str(dic_edges_nodes_graph_by_layer) + "\n\n\n")
-                        logger.info(f'Appending ref subgraph {dic_edges_nodes_graph_by_layer}')
-                        list_dic_edges_nodes_graph_by_layer_update.append(dic_edges_nodes_graph_by_layer)
-
-        list_dic_edges_nodes_graph_by_layer = list_dic_edges_nodes_graph_by_layer_update
+        list_dic_edges_nodes_graph_by_layer =\
+            extract_ref_subgraph_based_on_total_input_idx(list_dic_edges_nodes_graph_by_layer,
+                                                          l_total_input_idx_mod_ref_for_subgraph_base,
+                                                          ref_subgraph_depth)
 
     fo_log.write("\n\nmade ref subgraph" + str(list_dic_edges_nodes_graph_by_layer) + "\n\n\n")
     logger.info(f'Made ref subgraph: {list_dic_edges_nodes_graph_by_layer}')
 
-    ######################
+    ######################################################################################
     # [N1t] UPDATING (SUB)GRAPH info
-    # now it is possible some of graph by layer has No nodes.
+    # now it is possible some graph by layer has No nodes.
     # for example, after ref compound filtration, organooxygen ref layer has NO spectra.
-    #  now you want to keep "graph by layer" that actually have spectra(node)
+    # now you want to keep "graph by layer" that actually have spectra(node)
 
     # output log
     fo_log_key.write("\n\n [N1t] UPDATING (SUB)GRAPH info")

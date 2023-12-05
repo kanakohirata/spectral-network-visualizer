@@ -108,14 +108,14 @@ def extract_subgraph_based_on_sample_global_accession(l_global_accession_for_sub
     return list_dic_edges_nodes_graph_by_layer_new, FG_all_samples, l_total_input_idx_mod_sample
 
 
-def extract_ref_subgraph_connected_to_sample(list_dic_edges_nodes_graph_by_layer: list,
-                                             list_total_input_idx_MOD_inter_sample_ref_layer: list,
-                                             subgraph_depth: int):
+def extract_ref_subgraph_based_on_total_input_idx(list_dic_edges_nodes_graph_by_layer: list,
+                                                  list_total_input_idx: list,
+                                                  subgraph_depth: int):
     """
     Parameters
     ----------
     list_dic_edges_nodes_graph_by_layer : list
-    list_total_input_idx_MOD_inter_sample_ref_layer : list
+    list_total_input_idx : list
     subgraph_depth : int
 
     Returns
@@ -138,8 +138,8 @@ def extract_ref_subgraph_connected_to_sample(list_dic_edges_nodes_graph_by_layer
         for cluster_total_input_idx_MOD, node_info in \
                 dic_edges_nodes_graph_by_layer['dic_cluster_total_input_idx_MOD_vs_node_info'].items():
 
-            # if the ref node is in inter ref-sample node list
-            if cluster_total_input_idx_MOD in list_total_input_idx_MOD_inter_sample_ref_layer:
+            # if the ref node is in list_total_input
+            if cluster_total_input_idx_MOD in list_total_input_idx:
                 list_total_input_idx_mod_for_base.append(cluster_total_input_idx_MOD)
 
         # creating subgraph.

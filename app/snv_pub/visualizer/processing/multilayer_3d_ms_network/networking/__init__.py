@@ -1,6 +1,6 @@
 from .create_networkx_graph import create_networkx_graph, create_sample_networkx_graph
 from .create_quantitative_subgraph import create_quantitative_subgraph
-from .extract_subgraph import (extract_ref_subgraph_connected_to_sample,
+from .extract_subgraph import (extract_ref_subgraph_based_on_total_input_idx,
                                extract_ref_subgraph_in_external_compounds,
                                extract_subgraph_based_on_sample_global_accession)
 from .locate_nodes_to_layers_and_update_edges import locate_nodes_to_layers_and_update_edges
