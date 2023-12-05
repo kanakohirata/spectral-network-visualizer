@@ -1,3 +1,4 @@
+from .add_2d_layout import add_2d_layout
 from .create_networkx_graph import create_networkx_graph, create_sample_networkx_graph
 from .create_quantitative_subgraph import create_quantitative_subgraph
 from .define_layers import define_layers

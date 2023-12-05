@@ -19,7 +19,8 @@ from .my_parser.cluster_attribute_parser import read_cluster_attribute
 from .my_parser.compound_info_parser import add_external_cmpd_info
 from .my_parser.edge_info_parser import read_edge_info
 from .my_parser.feature_table_parser import read_feature_table
-from .networking import (create_networkx_graph,
+from .networking import (add_2d_layout,
+                         create_networkx_graph,
                          create_quantitative_subgraph,
                          create_sample_networkx_graph,
                          define_layers,
@@ -1513,15 +1514,6 @@ def process_3d_network_data(dic_source_data, dic_config):
     fo_log.flush()
     logger.warning(f'dic_layer_id_vs_attribute_for_layer: {dic_layer_id_vs_attribute_for_layer}')
 
-    ####################
-    # layers in upper
-
-    ################
-    # layers in lower (samples)
-
-    ############
-    # list_dictionary     upper,   FG
-
     ####################################
     # Main [Q] get layout, 2D
     ######################################
@@ -1530,9 +1522,9 @@ def process_3d_network_data(dic_source_data, dic_config):
                   f'\tlength of list_of_edge_for_networkx'
     for dic in list_dic_edges_nodes_graph_by_layer:
         fo_log_key.write(
-            "\n" + dic["attribute_for_layer"] + " : " + "dic_cluster_total_input_idx_MOD_vs_node_info:" + str(
-                len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])) \
-            + ",    list_of_edge_for_networkx: " + str(len(dic["list_of_edge_for_networkx"])))
+            f'\n{dic["attribute_for_layer"]} : '
+            f'dic_cluster_total_input_idx_MOD_vs_node_info:{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}'
+            f',    list_of_edge_for_networkx: {len(dic["list_of_edge_for_networkx"])}')
         log_message += f'\n{dic["attribute_for_layer"]}\t{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}' \
                        f'{len(dic["list_of_edge_for_networkx"])}'
     logger.info(log_message)
@@ -1546,7 +1538,7 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     ###############
     # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ### Whether you show similarity edge or only identcail edge in inter sample layer.
+    # Whether you show similarity edge or only identical edge in inter sample layer.
     f_show_only_pillar_inter_sample = 0
 
     list_of_edge_for_pillar = []
@@ -1558,80 +1550,33 @@ def process_3d_network_data(dic_source_data, dic_config):
                 list_of_edge_for_pillar.append(e)
                 count = count + 1
         list_of_edge_for_networkx_to_show_inter_sample_layer = list_of_edge_for_pillar
-    #
 
     logger.debug("[multilayer_3d_network_b1/process_3d_network_data]  performing nx spring layout for all samples ")
 
-    # this layout ( dictionary in which key is total_input_idx_mod, value is coordintate) keeps all sample laytout and CAN BE SHARED among all samples.
-    layout_2d_all_samples = nx.spring_layout(FG_all_samples, k=0.1, scale=2)
+    list_dic_edges_nodes_graph_by_layer = add_2d_layout(list_dic_edges_nodes_graph_by_layer, dic_config, FG_all_samples)
 
-    logger.debug("[multilayer_3d_network_b1/process_3d_network_data]  finished nx spring layout for all samples")
-
-    ###
-    ## Get layout
-
-    logger.debug("(main) get layout 2D")
-    for dic in list_dic_edges_nodes_graph_by_layer:
-        f_base_layer = 0
-        if dic["attribute_for_layer"].startswith("sample_"):
-            f_base_layer = 1
-
-        # for sample data sets (layer). can be more than one.
-        ##################
-        if f_base_layer == 1:
-            # NOTE !!!!  the layout for all samples "layout_2d_all_samples " contain all nodes in multiple sample layers.
-            #   if multiple layers keep sharing this layout, you will bump into problem when adding Z-axis.
-            # therefore you should make dedicated layout foreach layer here.
-            layout_extracted = {}
-            # iterate all total input idx mod for this layer
-            for total_input_idx_mod, node_info in dic["dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-                # then feeed to new layout.
-                layout_extracted[total_input_idx_mod] = layout_2d_all_samples[total_input_idx_mod]
-            layout_2d = layout_extracted
-
-        # for ref layer, you have to perform layout.
-        # !!!!!!!!!!!! making ref layer shrink
-        if f_base_layer == 0:
-            layout_2d = nx.spring_layout(dic["nx_graph"], k=0.01, scale=2)
-            # layout_2d = nx.spectral_layout(dic["nx_graph"])
-        dic["layout_2d"] = layout_2d
-
-        for idxm, o in dic["dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-            if not idxm in layout_2d:
-                logger.debug(f"!!!!!! {idxm} not present !!!!")
-                dic_config["all_data_valid"] = False
-                dic_config["l_func_invalid_data"].append("read_config_file")
-
-    logger.debug("(main) finished geting layout 2D")
+    logger.debug("(main) finished getting layout 2D")
     logger.debug("making traces")
-    ## traces is a list plotly object, inclusing both nodes, and edges.
-    ## l_mesh_annotations are plotly object.
+    # traces is a list plotly object, including both nodes, and edges.
+    # l_mesh_annotations are plotly object.
 
-    fo_log.write("\n\n  list_dic_edges_nodes_graph_by_layer" + "\n")
+    fo_log.write("\n\n  list_dic_edges_nodes_graph_by_layer\n")
     log_message = 'list_dic_edges_nodes_graph_by_layer\nattribute_for_layer\tlist_of_edge_for_networkx'
     for dic in list_dic_edges_nodes_graph_by_layer:
-        str_o = "\n"
-        str_o = str_o + str(dic["attribute_for_layer"]) + " : "
-        str_o = str_o + str(dic["list_of_edge_for_networkx"])
+        str_o = f'\n{dic["attribute_for_layer"]} : {dic["list_of_edge_for_networkx"]}'
         fo_log.write(str_o)
         log_message += f'\n{dic["attribute_for_layer"]}\t{dic["list_of_edge_for_networkx"]}'
 
     fo_log.flush()
     logger.info(log_message)
 
-    dic_processed_network_data = {}
-
-    dic_processed_network_data["list_dic_edges_nodes_graph_by_layer"] = list_dic_edges_nodes_graph_by_layer
-    dic_processed_network_data["dic_global_accession_vs_mass_feature"] = dic_global_accession_vs_mass_feature
-
-    dic_processed_network_data[
-        "dic_cluster_total_input_idx_MOD_vs_node_info"] = dic_cluster_total_input_idx_MOD_vs_node_info
-    dic_processed_network_data[
-        "list_of_edge_for_networkx_to_show_inter_sample_ref_layer"] = list_of_edge_for_networkx_to_show_inter_sample_ref_layer
-    dic_processed_network_data[
-        "list_of_edge_for_networkx_to_show_inter_sample_layer"] = list_of_edge_for_networkx_to_show_inter_sample_layer
-
-    dic_processed_network_data["dic_layer_id_vs_attribute_for_layer"] = dic_layer_id_vs_attribute_for_layer
+    dic_processed_network_data = {
+        "list_dic_edges_nodes_graph_by_layer": list_dic_edges_nodes_graph_by_layer,
+        "dic_global_accession_vs_mass_feature": dic_global_accession_vs_mass_feature,
+        "dic_cluster_total_input_idx_MOD_vs_node_info": dic_cluster_total_input_idx_MOD_vs_node_info,
+        "list_of_edge_for_networkx_to_show_inter_sample_ref_layer": list_of_edge_for_networkx_to_show_inter_sample_ref_layer,
+        "list_of_edge_for_networkx_to_show_inter_sample_layer": list_of_edge_for_networkx_to_show_inter_sample_layer,
+        "dic_layer_id_vs_attribute_for_layer": dic_layer_id_vs_attribute_for_layer}
 
     fo_log_key.write("\n\n finishing")
     log_message = 'Finishing\nLength of each data\nattribute_for_layer\tdic_cluster_total_input_idx_MOD_vs_node_info' \
@@ -1639,10 +1584,9 @@ def process_3d_network_data(dic_source_data, dic_config):
 
     for dic in list_dic_edges_nodes_graph_by_layer:
         fo_log_key.write(
-            "\n" + dic["attribute_for_layer"] + " : " + "dic_cluster_total_input_idx_MOD_vs_node_info:" + str(
-                len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])) \
-            + ",    list_of_edge_for_networkx: " + str(len(dic["list_of_edge_for_networkx"])) + " : " + str(
-                len(dic["layout_2d"])) + " : " + str(len(dic["layout_2d"])))
+            f'\n{dic["attribute_for_layer"]} : '
+            f'dic_cluster_total_input_idx_MOD_vs_node_info: {len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}'
+            f',    list_of_edge_for_networkx: {len(dic["list_of_edge_for_networkx"])} : {len(dic["layout_2d"])}')
         log_message += f'{dic["attribute_for_layer"]}\t{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}' \
                        f'\t{len(dic["list_of_edge_for_networkx"])}\t{len(dic["layout_2d"])}'
     fo_log_key.close()
