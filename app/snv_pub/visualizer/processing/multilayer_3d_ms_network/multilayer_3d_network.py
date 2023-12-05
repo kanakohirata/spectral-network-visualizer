@@ -22,6 +22,7 @@ from .my_parser.feature_table_parser import read_feature_table
 from .networking import (create_networkx_graph,
                          create_quantitative_subgraph,
                          create_sample_networkx_graph,
+                         extract_subgraph_based_on_sample_global_accession,
                          locate_nodes_to_layers_and_update_edges,
                          make_edges_and_nodes_inner_layer,
                          make_edges_and_nodes_inter_layer,
@@ -196,390 +197,6 @@ def define_layers(dic_config, dic_cluster_total_input_idx_MOD_vs_node_info):
     return dic_layer_id_vs_attribute_for_layer
 
 
-"""
-
-def layout_locate_node_to_layers( conf, FG ,layt_2d ,  dic_layer_id_vs_attribute_for_layer,list_node_total_input_idx_mod_in_use \
-                                  , dic_cluster_total_input_idx_MOD_vs_node_info,dic_global_accession_vs_mass_feature,l_edges_in_use  ):
-
-    fo = open("layout_locate_node_to_layers.txt" , "w")
-
-    for k, v in dic_cluster_total_input_idx_MOD_vs_node_info.items():
-        print("spec_cluster.list_compound_categories" , v.spec_cluster.list_compound_categories)
-
-
-
-
-    ##########################################################
-    # [Y1] split nodes to layers according to attribute
-    # make layer id vs node id, like   layer id 1 contain node [1,2,3,4,5]
-
-    # but first, make list of layer id present
-    l_layer_id = []
-    # for node_id_vs_dic in l_tup_node_id_vs_dic:
-    fo_node = open("node_info.txt" , "w")
-
-    fo_node.write( "NODE[0]  NODE[1][attribute_for_layer]   NODE[1][layerid] NODE[1][globalaccession]\n")
-    for node in FG.nodes(data=True):
-        l_layer_id.append(node[1]["layer_id"])
-        fo_node.write( node[0]+ "\t"+ str(node[1]["attribute_for_layer"]) +"\t"+ str(node[1]["layer_id"]) +"\t"+ str(node[1]["global_accession"]) +"\n" )
-
-    l_layer_id = list(set(l_layer_id))
-
-    print("layer ids:", l_layer_id)
-
-    #############################################################
-    # then make list of tuple ( layer_id , list_of_node_id)
-    l_tup_layer_id_vs_l_node_id = []
-
-    for layer_id in l_layer_id:
-        l_node_id_x = []
-        # for tup_node_id_vs_dic in l_tup_node_id_vs_dic:
-        for node in FG.nodes(data=True):
-            if node[1]["layer_id"] == layer_id:
-                l_node_id_x.append(node[0])
-        l_tup_layer_id_vs_l_node_id.append((layer_id, l_node_id_x))
-
-    print("l_tup_layer_id_vs_l_node_id", l_tup_layer_id_vs_l_node_id)
-
-    fo_layer = open("layer_info.txt" , "w")
-
-    for tup in l_tup_layer_id_vs_l_node_id:
-        so = str(tup[0]) + ":" + str (tup[1]) +"\n"
-        fo_layer.write( so + "\n")
-
-    #####################################################################
-    # This list contains layout, one layout is for one layer/mesh
-    dic_layer_id_vs_layt = {}
-    ########################################################################
-    # iterate over  list  of tuple ( layer id , list node id of this layer )
-    for tup_layer_id_vs_l_node_id in l_tup_layer_id_vs_l_node_id:
-        curr_layer_id = tup_layer_id_vs_l_node_id[0]
-        layt_for_layer = {}
-
-        # layt_2d is dictionary where key is node id and value is x,y coordinate as a list  1: [ 2,3]
-        for node_id, node_coor in layt_2d.items():
-            # if the node id is found in the list of node of the layer
-            if node_id in tup_layer_id_vs_l_node_id[1]:
-                layt_for_layer[node_id] = node_coor
-
-        dic_layer_id_vs_layt[curr_layer_id] = layt_for_layer
-
-
-
-    l_layt = []
-
-    str_o = ""
-    for k , v in dic_layer_id_vs_layt.items():
-        str_o = str_o +   "layer_id:" +  str(k) + " layt: " + str(v) + "\n"
-    #fo_pl.write(   " \n\n\ndic_layer_id_vs_layt\n"  + str_o    )
-    #fo_pl.write(" \n\n\nl_layer_id: " + str(l_layer_id))
-
-
-
-
-    #################################################################
-    #  [Y3] HERE you have to make coordinates for 3d mesh
-    # layer (3d mesh) to put rescaled nodes and edges
-    #####
-    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ###########
-    ##  This is causeing weird behavior and errors.......   originally x3,y2
-    num_x_grid =  4
-    num_y_grid =  4
-
-
-    #####
-    #  making number of z-depth causing some issues
-    # now you have to realize number of z depth
-    import math
-    num_z_depth = int(math.ceil(float( len(l_layer_id)) / float(num_x_grid * num_y_grid))) + 1
-
-    print("l_layer_id:" ,l_layer_id)
-    print("len(l_layer_id))" , len(l_layer_id))
-
-
-
-
-    l_my_ranges_x = m3d_mesh.fractionate_range([-10, 10], num_x_grid, ratio_gap=0.02)
-    l_my_ranges_y = m3d_mesh.fractionate_range([-10, 10], num_y_grid, ratio_gap=0.02)
-
-
-    l_my_z = m3d_mesh.fractionate_z_flat([1, 5], num_z_depth)
-    l_my_z = sorted(l_my_z, reverse=True)
-    # just chech the intermediate
-
-
-
-    ############################
-    # [Y6]make layers (3d meshes)
-    ################################
-    # list of graph object of 3d mesh
-    list_go_mesh3d = []
-    # make 3d mesh coordinates ad dic where key is layer id.
-
-    # making new layer id list which contain only upper )(reference probably
-
-
-    dic_layer_id_vs_3d_mesh_coordintates = m3d_mesh.make_dic_of_zflat_3d_mesh_coordinates(l_layer_id, l_my_ranges_x,
-                                                                                    l_my_ranges_y, l_my_z)
-
-    ###############################################
-    # create 3d meshes
-    ############################################
-    list_go_mesh3d = []
-
-    # define color pallet
-    l_colors = ["#1f77b4", "#2ca02c", "#ff7f0e", "#d62728", "#9467bd", "#8c564b"]
-
-    # dictionary where key is layer group id and value is list of layer id.
-    # if you dont want to set any layer, make this dic empty
-    #dic_layer_group_id_vs_l_layer_id = {1: [2, 4, 6, 12], 2: [8, 10, 19], 3: [11, 16, 17]}
-
-
-
-    ########################
-    #  mesh annotation
-    ##########################
-    print("dic_layer_id_vs_3d_mesh_coordintates",dic_layer_id_vs_3d_mesh_coordintates)
-
-    l_mesh_annotations = []
-
-    for key_id, co in dic_layer_id_vs_3d_mesh_coordintates.items():
-        txt_annotation = str(dic_layer_id_vs_attribute_for_layer[key_id])
-        # remove sample text from ref layer annotation
-        if dic_layer_id_vs_attribute_for_layer[key_id] == "sample":
-            txt_annotation = "none"
-        l_mesh_annotations.append(dict(showarrow=False, x=co[0][0], y=co[1][0], z=co[2][0],
-                                       text= txt_annotation,
-                                       xanchor="center",
-                                       xshift=10,
-                                       yanchor="middle",
-                                       opacity=0.9,
-                                        font = dict( color="blue", size=20 )
-                                       )
-                                  )
-
-    ###########################
-    #   [Y8]layer info (range) for rescaling
-    #
-    #   dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat will have
-    #      layer_id as key
-    #      [x_min, x_max, y_min, y_max, z_Stat]  as value.
-    #       This will be used to rescale node/edge coodinate for each layer
-    ##############################
-    dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat = {}
-    for k , v in dic_layer_id_vs_3d_mesh_coordintates.items():
-        # v is 3d_mesh_coordintates  [[0.2, 9.8, 0.2, 9.8], [-9.8, -9.8, -0.2, -0.2], [1.0, 1.0, 1.0, 1.0]]
-        dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[ k ] = [   min( v[0]) , max( v[0])  ,   min( v[1]) , max( v[1])    , min( v[2]) ]
-
-
-
-
-    f_make_layer_id_0_as_base = 1
-
-    dic_layer_group_id_vs_l_layer_id = {}
-
-    for layer_id, co in dic_layer_id_vs_3d_mesh_coordintates.items():
-
-        color_code = "#1f77b4"
-        # assign layer coloar according to layer group.
-        for layer_group_id, l_layer_id in dic_layer_group_id_vs_l_layer_id.items():
-            if layer_id in l_layer_id:
-                color_code = l_colors[layer_group_id]
-
-        # if you want to make sample layer (id:0) to base
-        if f_make_layer_id_0_as_base == 1 :
-            # sample layer is 0
-            if layer_id != 0 :
-                list_go_mesh3d.append( \
-                    go.Mesh3d(x=co[0], y=co[1], z=co[2], name = "3dmesh" , opacity=0.20, color=color_code, text="layer_id_" + str(layer_id)))
-        # if you do NOT want to make sample layer to base
-        if f_make_layer_id_0_as_base != 1:
-            list_go_mesh3d.append(
-                go.Mesh3d(x=co[0], y=co[1], z=co[2],  name = "3dmesh" , opacity=0.20, color=color_code, text="layer_id_" + str(layer_id)))
-
-
-
-    print(" len of list_go_mesh3d " , len(list_go_mesh3d))
-
-
-    #################################
-    ## [Y9] base layer
-
-    if f_make_layer_id_0_as_base == 1 :
-        list_go_mesh3d.append(  go.Mesh3d(x=[ -10,10,-10,10], y=[-10,-10,10,10], z=[-3,-3,-3,-3], opacity=0.10, color="green", text="base_" ))
-
-
-    def merge_two_dicts(x, y):
-        z = x.copy()  # start with x's keys and values
-        z.update(y)  # modifies z with y's keys and values & returns None
-        return z
-
-
-    ##########################3
-    # rescaling  coordinate
-    ##############################
-    l_base_layer_id = [0]
-    layt_arranged = {}
-
-
-    # note layt_x is layt which is dictionary (   node id is key, vale is [ x_coordinate, y_coordinate]    )
-    #  rearrange_networkx_2d_layout_make_3d_zstat   layt_ori, x_min, x_max, y_min, y_max, z_stat
-
-
-    for layer_id, layt_x in dic_layer_id_vs_layt.items():
-        #print "layer_id" ,layer_id
-        #print dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id]
-
-        # rescaling coordinates for base layer
-        # if current layt is for lyer_id 0 which is base layer,  AND you want to make it as base layer
-        if f_make_layer_id_0_as_base == 1 :
-                ###
-                if layer_id == 0 :
-                    #print "making special base layer"
-
-                    layt_new = m3d_rescale.rearrange_networkx_2d_layout_make_3d_zstat(layt_x,-10,10,-10,10,-3)
-                    layt_arranged = merge_two_dicts(layt_arranged, layt_new)
-
-                if layer_id != 0:
-                    layt_new = m3d_rescale.rearrange_networkx_2d_layout_make_3d_zstat(layt_x, \
-                            dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][0],
-                             dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][1],
-                             dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][2],
-                              dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][3],
-                              dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][4])
-
-                    layt_arranged = merge_two_dicts(layt_arranged, layt_new)
-
-
-        # if you dont have to make base layer
-        if f_make_layer_id_0_as_base == 0:
-            layt_new = m3d_rescale.rearrange_networkx_2d_layout_make_3d_zstat(layt_x, \
-                                dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][0],
-                                dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][1],
-                                dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][2],
-                                dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][3],
-                                dic_layer_id_vs_list_3d_mesh_min_max_value_xy_zstat[layer_id][4])
-
-            layt_arranged = merge_two_dicts(layt_arranged, layt_new)
-
-    print("++++++++++")
-    print(layt_arranged)
-
-    #fo_pl.write(  "\n\n  Layout arranged")
-    #for id , coor in layt_arranged.iteritems():
-    #    fo_pl.write("\n" + str(id)  + " :" +   str(coor))
-
-
-    #fo_pl.write( "\nl_cluster_total_input_idx" + str(l_cluster_total_input_idx))
-    #fo_pl.write ( "\nl_edges" + str(l_edges))
-
-    #########
-    #  MAKE 3D TRACE/COORDINATE
-    ####
-    # if you get error here, check all nodes area actually in edges
-
-
-    ########################################
-    # ADDING COLOR INFO TO NETWROK
-    ########################################
-
-    # note the element of l_nodes_in_use is cluster id.
-    import math
-
-    stat_val_threshold = 0.1
-
-    math_log_base = 2
-    l_node_color = []
-    str_f = "cluster_id\tfeature_id\tval"
-
-    fo_quant = open("quant_process.tsv", "w")
-
-    so = "CLUSTER_ID\tTITLE(FEATURE_ID\tQUANT\n"
-
-    count_hit_feature_list = 0
-    val_lowest = None
-
-    for total_input_idx_mod in list_node_total_input_idx_mod_in_use:
-        global_accession = dic_cluster_total_input_idx_MOD_vs_node_info[total_input_idx_mod].spec_cluster.global_accession
-        feature_val = 1.0
-
-        for k, mf in dic_global_accession_vs_mass_feature.items():
-            # if feature_id in dic_global_accession_vs_mass_feature:
-            if mf.global_accession == global_accession:
-                count_hit_feature_list += 1
-
-                # if statistical significance val (like-ttest-pval) is lower than threshold
-                if mf.stat_val < stat_val_threshold:
-                    feature_val = float(mf.value_to_show)
-
-        val_processed = math.log(feature_val + 0.001, math_log_base)
-        l_node_color.append(val_processed)
-
-
-    print("l_node_color", l_node_color)
-    sys.exit()
-    ################
-    # color for upper layers for compound information
-    for n in range(len(list_node_total_input_idx_mod_in_use)):
-        print(n, end=' ')
-
-        fo.write( "\n" +  str(dic_cluster_total_input_idx_MOD_vs_node_info[list_node_total_input_idx_mod_in_use[n]].spec_cluster.list_compound_categories) )
-        if     len(dic_cluster_total_input_idx_MOD_vs_node_info[list_node_total_input_idx_mod_in_use[n]].spec_cluster.list_compound_categories) > 0:
-            l_node_color[n]= max(l_node_color)
-            fo.write(   "\n tox found" )
-            print("tox")
-    fo.flush()
-
-
-    ###############
-    # define color for edges connecting same mass nodes
-    mz_tol = 0.1
-    l_edges_in_use_color = []
-
-    for edge in FG.edges.data():
-        str_o = ""
-        if abs(edge[2]['delta_mz']) < mz_tol:
-            l_edges_in_use_color.append(1)
-            str_o = "\n" + str(edge) +":" + "samemass"
-        else:
-            l_edges_in_use_color.append(0)
-            str_o = "\n" + str(edge) + ":" + "not same"
-        fo.write( str_o)
-    fo.flush()
-
-    for node in FG.nodes(data=True):
-        l_layer_id.append(node[1]["layer_id"])
-        fo_node.write( node[0]+ "\t"+ str(node[1]["attribute_for_layer"]) +"\t"+ str(node[1]["layer_id"]) +"\t"+ str(node[1]["global_accession"]) +"\n" )
-
-
-
-
-
-    if count_hit_feature_list < 2:
-        print(" most of fragment spec info cannot be found in the specified feature table.\n Probably wrong file name for feature table?")
-        print("note file name (except file extension) of fragment spec and feature table  has to be exactly  same")
-    fo_quant.write(so)
-    fo_quant.close()
-
-    str_f = str_f
-
-
-    print("l_node_color:", l_node_color)
-
-    print("m3d_rescale.get_multi_traces_3d_network_x started")
-    print("\n\n")
-    traces = m3d_rescale.get_multi_traces_3d_network_x(layt_arranged, list_node_total_input_idx_mod_in_use,
-                                                       l_edges_in_use,
-                                                       dic_total_input_idx_mod_vs_node_obj=dic_cluster_total_input_idx_MOD_vs_node_info
-                                                       , l_node_color=l_node_color, l_edges_color=l_edges_in_use_color)
-    print("m3d_rescale.get_multi_traces_3d_network_x finished")
-    return traces , list_go_mesh3d,  l_mesh_annotations
-
-
-"""
-
-
 def export_current_edges(conf, list_dic_edges_nodes_graph_by_layer, \
                          list_of_edge_for_networkx_to_show_inter_sample_ref_layer,
                          list_of_edge_for_networkx_to_show_inter_sample_layer):
@@ -683,38 +300,6 @@ def export_current_nodes(conf, list_dic_edges_nodes_graph_by_layer):
 
 
 # end-------- export_current_nodes
-
-
-"""
-
-def remove_nodes_from_dataset(dic_dataset,config_o):
-
-
-    list_dic_edges_nodes_graph_by_layer = dic_dataset["list_dic_edges_nodes_graph_by_layer"]
-    dic_global_accession_vs_mass_feature = dic_dataset["dic_global_accession_vs_mass_feature"]
-
-    dic_cluster_total_input_idx_MOD_vs_node_info = dic_dataset["dic_cluster_total_input_idx_MOD_vs_node_info"]
-    list_of_edge_for_networkx_to_show_inter_sample_ref_layer = dic_dataset["list_of_edge_for_networkx_to_show_inter_sample_ref_layer"] =
-    list_of_edge_for_networkx_to_show_inter_sample_layer = dic_dataset["list_of_edge_for_networkx_to_show_inter_sample_layer"]
-
-    # remove node for dic_dataset["list_dic_edges_nodes_graph_by_layer"]
-    for dic_edges_nodes_graph_by_layer in dic_dataset["list_dic_edges_nodes_graph_by_layer"] :
-        list_of_edge_for_networkx_new = []
-        for edge in dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"]:
-
-            for total_input_ddx_MOD in config_o.l_total_input_idx_MOD_to_remove:
-                if edge[0] !=   total_input_ddx_MOD   and  edge[1] != total_input_ddx_MOD:
-                    list_of_edge_for_networkx_new.append(edge)
-        # take over
-        dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"]=list_of_edge_for_networkx_new
-
-        # remove from networkx graph---------------------
-
-        # get nodes in the graph to remove (  get intersection of l of nodes in graph and l of input idx mod)
-        l_total_input_idx_NOD_in_G_to_remove = list(set(dic_edges_nodes_graph_by_layer["nx_graph"].nodes) & set(config_o.l_total_input_idx_MOD_to_remove))
-        # then remove using nx function
-        dic_edges_nodes_graph_by_layer["nx_graph"].remove_nodes_from(l_total_input_idx_NOD_in_G_to_remove)
-"""
 
 
 def create_data_for_3d_visualization(dic_processed_data, conf):
@@ -1764,7 +1349,6 @@ def process_3d_network_data(dic_source_data, dic_config):
     ##########################################
     # [N1b] user select node-based subgraph
     ##########################################
-
     fo_log_key.write("\n\n [N1b] user select node-based subgraph")
     log_message = f'[N1b] user select node-based subgraph\nattribute_for_layer' \
                   f'\tlength of dic_cluster_total_input_idx_MOD_vs_node_info\tlength of list_of_edge_for_networkx'
@@ -1783,97 +1367,32 @@ def process_3d_network_data(dic_source_data, dic_config):
     FG_all_samples = create_sample_networkx_graph(list_dic_edges_nodes_graph_by_layer,
                                                   list_of_edge_for_networkx_to_show_inter_sample_layer,
                                                   fo_log)
-
-    # create subgraph  for sample-combined dataset-----------------------------------------------------
+    
+    # create subgraph for sample-combined dataset -----------------------------------------------------
     l_global_accession_for_subgraph_sample_user_selected = dic_config["l_global_accession_for_node_select_subgraph"]
-    l_total_idx_mod_user_select_subgraph_all_sample = []
 
     if len(l_global_accession_for_subgraph_sample_user_selected) > 0:
-        list_total_input_idx_mod_for_subgraph = []
-        nx_graph = FG_all_samples
-        fo_log.write("nx_graph.data(): " + str(nx_graph.edges.data()))
-        logger.info(f'nx_graph.data(): {nx_graph.edges.data()}')
+        (list_dic_edges_nodes_graph_by_layer,
+         FG_all_samples,
+         l_total_input_idx_mod_sample_new) = \
+            extract_subgraph_based_on_sample_global_accession(l_global_accession_for_subgraph_sample_user_selected,
+                                                              dic_config["node_select_subgraph_depth"],
+                                                              list_dic_edges_nodes_graph_by_layer,
+                                                              FG_all_samples,
+                                                              fo_log)
 
-        # l_global_accession_for_subgraph_sample_user_selected  is the list of "base" (starting point of subgraph)
-        # node[0] is total_input_idx_mod
-        for node in nx_graph.nodes(data=True):
-            fo_log.write("\n  FG_allsamples node:" + str(node))
-            logger.info(f'FG_allsamples node: {str(node)}')
-            if node[1]['global_accession'] in l_global_accession_for_subgraph_sample_user_selected:
-                list_total_input_idx_mod_for_subgraph.append(node[0])
-        base = list_total_input_idx_mod_for_subgraph
+        l_total_input_idx_mod_sample += l_total_input_idx_mod_sample_new
 
-        fo_log.write("CREATING SUER DEFINED SUBGRAPH:" + "suggraphdepth:" + str(
-            dic_config["node_select_subgraph_depth"]) + "   base:" + str(base) + "\n")
-        fo_log.flush()
-        logger.info(f'CREATING SUER DEFINED SUBGRAPH'
-                    f'\nconfig_o.node_select_subgraph_depth: {dic_config["node_select_subgraph_depth"]}'
-                    f'\nbase: {base}')
-
-        foundset = {key for source in base for key in
-                    list(nx.single_source_shortest_path(nx_graph, source,
-                                                        cutoff=dic_config["node_select_subgraph_depth"]).keys())}
-        # update and replace nx graph and other info
-
-        fo_log.write("\n\nfound set:" + str(foundset))
-        logger.info(f'Found set: {foundset}')
-        nx_graph_sub = nx_graph.subgraph(foundset)
-        FG_all_samples = nx_graph_sub
-
-        # l_total_idx_mod_user_select_subgraph_all_sample   holds all idx mod to be extracted
-
-        for n in nx_graph_sub.nodes.data():
-            l_total_idx_mod_user_select_subgraph_all_sample.append(n[0])
-
-        # foe each layer
-        for dic_edges_nodes_graph_by_layer in list_dic_edges_nodes_graph_by_layer:
-            # if the current layer is "sample"------------------------------------------------------
-            if dic_edges_nodes_graph_by_layer["attribute_for_layer"].startswith("sample"):
-
-                ####################################################################
-                # create subgraph---------------------------------------------
-                list_total_input_idx_mod_for_subgraph = []
-                nx_graph = dic_edges_nodes_graph_by_layer["nx_graph"]
-                nx_graph_sub = nx_graph.subgraph(l_total_idx_mod_user_select_subgraph_all_sample)
-                dic_edges_nodes_graph_by_layer["nx_graph"] = nx_graph_sub
-
-                # create list of edges again.  nx.generate_edgelist  not really working ???
-                list_of_edge_for_networkx_sub = []
-                for e in nx_graph_sub.edges.data():
-                    list_of_edge_for_networkx_sub.append([e[0], e[1], e[2]])
-
-                dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"] = list_of_edge_for_networkx_sub
-
-                # updating "dic_cluster_total_input_idx_MOD_vs_node_info"-----------------------------
-
-                # this has total input idx mod PRESENT in subgraph
-                l_total_input_idx_mod_IN_subgraph = []
-
-                for node in nx_graph_sub.nodes(data=True):
-                    l_total_input_idx_mod_IN_subgraph.append(node[0])
-                    l_total_input_idx_mod_sample.append(node[0])
-                dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE = {}
-                for cluster_total_input_idx_MOD, node_info in dic_edges_nodes_graph_by_layer[
-                    "dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-                    if cluster_total_input_idx_MOD in l_total_input_idx_mod_IN_subgraph:
-                        dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE[cluster_total_input_idx_MOD] = node_info
-
-                dic_edges_nodes_graph_by_layer[
-                    "dic_cluster_total_input_idx_MOD_vs_node_info"] = dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE
-
-                ##########################################
-
-    fo_log.write("\n\n len of list_of_edge_for_networkx_to_show_inter_sample_ref_layer:" + str(
-        len(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)))
-    fo_log.write("\n\n list_of_edge_for_networkx_to_show_inter_sample_ref_layer" + str(
-        list_of_edge_for_networkx_to_show_inter_sample_ref_layer))
+    fo_log.write("\n\n len of list_of_edge_for_networkx_to_show_inter_sample_ref_layer:"
+                 f"{len(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)}")
+    fo_log.write("\n\n list_of_edge_for_networkx_to_show_inter_sample_ref_layer"
+                 f"{list_of_edge_for_networkx_to_show_inter_sample_ref_layer}")
     logger.info(f'Length of list_of_edge_for_networkx_to_show_inter_sample_ref_layer: '
                 f'{len(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)}')
     logger.info(f'list_of_edge_for_networkx_to_show_inter_sample_ref_layer: '
                 f'{list_of_edge_for_networkx_to_show_inter_sample_ref_layer}')
-
-    fo_log_key.write("\n\n len of list_of_edge_for_networkx_to_show_inter_sample_ref_layer: " + str(len(
-        list_of_edge_for_networkx_to_show_inter_sample_ref_layer)))
+    fo_log_key.write("\n\n len of list_of_edge_for_networkx_to_show_inter_sample_ref_layer: "
+                     f"{len(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)}")
     fo_log_key.flush()
 
     ##########################################
@@ -1886,16 +1405,16 @@ def process_3d_network_data(dic_source_data, dic_config):
                   f'\tlength of dic_cluster_total_input_idx_MOD_vs_node_info'
     for dic in list_dic_edges_nodes_graph_by_layer:
         fo_log_key.write(
-            "\n" + dic["attribute_for_layer"] + " : " + "dic_cluster_total_input_idx_MOD_vs_node_info:" + str(
-                len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])) \
-            + ",    list_of_edge_for_networkx: " + str(len(dic["list_of_edge_for_networkx"])))
+            f'\n{dic["attribute_for_layer"]} : '
+            f'dic_cluster_total_input_idx_MOD_vs_node_info:{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}'
+            f',    list_of_edge_for_networkx: {len(dic["list_of_edge_for_networkx"])}')
         log_message += f'\n{dic["attribute_for_layer"]}\t{len(dic["dic_cluster_total_input_idx_MOD_vs_node_info"])}' \
                        f'\t{len(dic["list_of_edge_for_networkx"])}'
     logger.info(log_message)
 
     logger.debug("[multilayer_3d_network_b1/process_3d_network_data]  [N1r create subgraph for ref layer")
     # !!!!!!!!!!!!!!!! NOTE !!!!!!!!!!!!!
-    #  l_total_input_idx_mod_sample is alrady only contain use-selected nodes, is user use that function. !
+    #  l_total_input_idx_mod_sample is already only contain use-selected nodes, is user use that function. !
     logger.debug("starting [create subgraph for ref layer]")
     fo_log_key.write("\n\n[create subgraph for ref layer]\n")
     logger.info('[create subgraph for ref layer]')
@@ -1911,14 +1430,12 @@ def process_3d_network_data(dic_source_data, dic_config):
         if inter_ref_sample_edge[1] in l_total_input_idx_mod_sample:
             l_total_input_idx_mod_ref_for_subgraph_base.append(inter_ref_sample_edge[0])
 
-    fo_log.write(
-        "\n\n" + "l_total_input_idx_mod_ref_for_subgraph_base\n" + str(l_total_input_idx_mod_ref_for_subgraph_base))
-    fo_log_key.write("\n" + " len of list_of_edge_for_networkx_to_show_inter_sample_ref_layer:" + str(
-        len(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)) + "\n")
-    fo_log_key.write("\n" + " len of l_total_input_idx_mod_ref_for_subgraph_base:" + str(
-        len(l_total_input_idx_mod_ref_for_subgraph_base)) + "\n")
-    fo_log_key.write("\n" + " len of l_total_input_idx_mod_sample:" + str(len(l_total_input_idx_mod_sample)) + "\n")
-
+    fo_log.write(f"\n\nl_total_input_idx_mod_ref_for_subgraph_base\n{l_total_input_idx_mod_ref_for_subgraph_base}")
+    fo_log_key.write("\n len of list_of_edge_for_networkx_to_show_inter_sample_ref_layer:"
+                     f"{len(list_of_edge_for_networkx_to_show_inter_sample_ref_layer)}\n")
+    fo_log_key.write("\n len of l_total_input_idx_mod_ref_for_subgraph_base:"
+                     f"{len(l_total_input_idx_mod_ref_for_subgraph_base)}\n")
+    fo_log_key.write(f"\n len of l_total_input_idx_mod_sample:{len(l_total_input_idx_mod_sample)}\n")
     fo_log_key.flush()
 
     logger.info(f'l_total_input_idx_mod_ref_for_subgraph_base: {l_total_input_idx_mod_ref_for_subgraph_base}')
@@ -1928,7 +1445,7 @@ def process_3d_network_data(dic_source_data, dic_config):
                 f'{len(l_total_input_idx_mod_ref_for_subgraph_base)}')
     logger.info(f'Length of l_total_input_idx_mod_sample: {len(l_total_input_idx_mod_sample)}')
 
-    ########################3
+    #######################################################
     # preserve nodes, edges only connected to sample layer
     depth_ref_preserve_interlayer = 10
     f_preserve_only_ref_node_inter_layer_connected = 1

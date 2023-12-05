@@ -111,7 +111,9 @@ class QuantitativeParameterForm(CustomParameterForm):
 
 
 class GlobalAccessionParameterForm(CustomParameterForm):
-    l_global_accession_for_node_select_subgraph = forms.CharField(label='Global Accession to Extract')
+    l_global_accession_for_node_select_subgraph = forms.CharField(
+        label='Global Accession to Extract',
+        help_text='Enter global accessions delimited with a semicolon.')
 
     node_select_subgraph_depth = forms.IntegerField(label='Extraction depth', min_value=1,
                                                     widget=forms.NumberInput(attrs={'step': 1, 'placeholder': '10'}))
@@ -243,13 +245,13 @@ def validate_mass_defect(str_mass_defects):
                     _ = float(mass_defect)
         except ValueError:
             raise ValidationError(
-                gettext_lazy('Enter numbers delimited with commas.')
+                gettext_lazy('Enter numbers delimited with a comma.')
             )
 
 
 class MassDefectParameterForm(CustomParameterForm):
     str_mass_defects = forms.CharField(label='Mass Defects', validators=[validate_mass_defect],
-                                       help_text='Enter numbers delimited with commas.')
+                                       help_text='Enter numbers delimited with a comma.')
 
 
 def validate_fragment_mz(str_fragment_mz_values: str):
@@ -257,7 +259,7 @@ def validate_fragment_mz(str_fragment_mz_values: str):
         str_fragment_mz_values = str_fragment_mz_values.strip()
         if not re.search(r'\d+\.?\d+', str_fragment_mz_values):
             raise ValidationError(
-                    gettext_lazy('Enter numbers delimited with commas, spaces or newlines.')
+                    gettext_lazy('Enter numbers delimited with a comma, space or newline.')
                 )
 
 
@@ -269,4 +271,4 @@ class FragmentMzParameterForm(CustomParameterForm):
 
     str_fragment_mz_values = forms.CharField(label='Fragment m/z (OR Search)', validators=[validate_fragment_mz],
                                              widget=forms.Textarea(attrs={'rows': '5'}),
-                                             help_text='Enter numbers delimited with commas, spaces or newlines.')
+                                             help_text='Enter numbers delimited with a comma, space or newline.')
