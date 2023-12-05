@@ -408,8 +408,9 @@ const displayCustomHover = (parentId, data) => {
 
     const myHover = document.getElementById(parentId);
     removeAllChildren(myHover).then((myHoverCleaned) => {
-        myHoverCleaned.style.top = pageY + 10; // 10px is padding of the <section id="main-network-graph-section"> element.
-        myHoverCleaned.style.left = pageX + 10;
+        // position styles should be string with "px"
+        myHoverCleaned.style['top'] = `${pageY + 10}px`; // 10px is padding of the <section id="main-network-graph-section"> element.
+        myHoverCleaned.style['left'] = `${pageX + 10}px`;
         myHoverCleaned.style['background-color'] = pointColor;
         myHoverCleaned.style.visibility = 'visible';
         // myHoverCleaned.style.display = '';
