@@ -22,6 +22,7 @@ from .my_parser.feature_table_parser import read_feature_table
 from .networking import (create_networkx_graph,
                          create_quantitative_subgraph,
                          create_sample_networkx_graph,
+                         extract_ref_subgraph_connected_to_sample,
                          extract_subgraph_based_on_sample_global_accession,
                          locate_nodes_to_layers_and_update_edges,
                          make_edges_and_nodes_inner_layer,
@@ -1451,53 +1452,10 @@ def process_3d_network_data(dic_source_data, dic_config):
     f_preserve_only_ref_node_inter_layer_connected = 1
 
     if f_preserve_only_ref_node_inter_layer_connected > 0:
-        # look for ref layer---------------------------------
-        for dic_edges_nodes_graph_by_layer in list_dic_edges_nodes_graph_by_layer:
-
-            # choosing ref layer (layer tag is not sample.)
-            if not dic_edges_nodes_graph_by_layer["attribute_for_layer"].startswith("sample"):
-
-                # selecting node
-                list_total_input_idx_mod_for_base = []
-                for cluster_total_input_idx_MOD, node_info in dic_edges_nodes_graph_by_layer[
-                    "dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-
-                    # if the ref node is in inter ref-sample node list
-                    if cluster_total_input_idx_MOD in list_total_input_idx_MOD_inter_sample_ref_layer:
-                        list_total_input_idx_mod_for_base.append(cluster_total_input_idx_MOD)
-
-                # creating subgraph.
-                nx_graph = dic_edges_nodes_graph_by_layer["nx_graph"]
-                base = list_total_input_idx_mod_for_base
-                foundset = {key for source in base for key in
-                            list(nx.single_source_shortest_path(nx_graph, source,
-                                                                cutoff=depth_ref_preserve_interlayer).keys())}
-                # update
-                nx_graph_sub = nx_graph.subgraph(foundset)
-                dic_edges_nodes_graph_by_layer["nx_graph"] = nx_graph_sub
-
-                # create list of edges again.  nx.generate_edgelist  not really working ???
-                list_of_edge_for_networkx_sub = []
-                for e in nx_graph_sub.edges.data():
-                    list_of_edge_for_networkx_sub.append([e[0], e[1], e[2]])
-
-                # update_edges
-                dic_edges_nodes_graph_by_layer["list_of_edge_for_networkx"] = list_of_edge_for_networkx_sub
-
-                # this has total input idx mod PRESENT in subgraph
-                l_total_input_idx_mod_IN_subgraph = []
-
-                for node in nx_graph_sub.nodes(data=True):
-                    l_total_input_idx_mod_IN_subgraph.append(node[0])
-                dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE = {}
-
-                for cluster_total_input_idx_MOD, node_info in dic_edges_nodes_graph_by_layer[
-                    "dic_cluster_total_input_idx_MOD_vs_node_info"].items():
-                    if cluster_total_input_idx_MOD in l_total_input_idx_mod_IN_subgraph:
-                        dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE[cluster_total_input_idx_MOD] = node_info
-
-                dic_edges_nodes_graph_by_layer[
-                    "dic_cluster_total_input_idx_MOD_vs_node_info"] = dic_cluster_total_input_idx_MOD_vs_node_info_UPDATE
+        list_dic_edges_nodes_graph_by_layer =\
+            extract_ref_subgraph_connected_to_sample(list_dic_edges_nodes_graph_by_layer,
+                                                     list_total_input_idx_MOD_inter_sample_ref_layer,
+                                                     depth_ref_preserve_interlayer)
 
     #########################################################
     # This is for extracting compounds and related, BASED ON EXTERNAL CMPD INFO
