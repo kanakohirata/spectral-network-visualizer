@@ -1,32 +1,18 @@
-import copy
 from logging import getLogger
-import networkx as nx
 import numpy as np
 import plotly.colors as pcolors
 from rdkit import Chem
-import sys
-from visualizer.processing.multilayer_3d_ms_network import multilayer_3d_network
-from visualizer.processing.multilayer_3d_ms_network import make_colormap
 from visualizer.processing.get_structure_data import get_mol_structure_2dsvg_base64
-
+from visualizer.processing.multilayer_3d_ms_network import make_colormap
+from .utils import get_text_color
 logger = getLogger(__name__)
 
 
-def get_text_color(rgb):
-    brightness = max(rgb) / 255
-    if brightness > 0.65:
-        color = '#000000'
-    else:
-        color = '#ffffff'
-
-    return color
-
-
-def reconstruct_graph_data_v2(list_dic_edges_nodes_graph_by_layer,
-                              list_of_edge_for_networkx_to_show_inter_sample_ref_layer,
-                              list_of_edge_for_networkx_to_show_inter_sample_layer,
-                              dic_layer_id_vs_attribute_for_layer,
-                              l_dic_mesh3d_data):
+def reconstruct_graph_data(list_dic_edges_nodes_graph_by_layer,
+                           list_of_edge_for_networkx_to_show_inter_sample_ref_layer,
+                           list_of_edge_for_networkx_to_show_inter_sample_layer,
+                           dic_layer_id_vs_attribute_for_layer,
+                           l_dic_mesh3d_data):
 
     dic_attribute_for_layer_vs_layer_id = {}
     for layer_id, attribute_for_layer in dic_layer_id_vs_attribute_for_layer.items():

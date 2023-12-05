@@ -14,7 +14,7 @@ from ..files.uploadhandler import TemporaryDirectoryUploadHandler
 from ..forms import *
 from ..processing.multilayer_3d_ms_network import config_ml3dnet
 from ..processing.multilayer_3d_ms_network import multilayer_3d_network
-from ..processing.multilayer_3d_ms_network import main_multilayer_3d_network_visualizer
+from ..processing.multilayer_3d_ms_network import reconstruct_graph_data
 from ..processing.multilayer_3d_ms_network import make_colormap
 
 logger = getLogger(__name__)
@@ -317,7 +317,7 @@ class GetNetworkData(generic.TemplateView):
          edge_trace_between_sample_and_ref,
          edge_trace_inter_sample,
          list_layer_id_vs_layer_trace) \
-            = main_multilayer_3d_network_visualizer.reconstruct_graph_data_v2(
+            = reconstruct_graph_data(
             dic_dataset_for_3d_network_visualization['list_dic_edges_nodes_graph_by_layer'],
             dic_processed_data['list_of_edge_for_networkx_to_show_inter_sample_ref_layer'],
             dic_processed_data['list_of_edge_for_networkx_to_show_inter_sample_layer'],
