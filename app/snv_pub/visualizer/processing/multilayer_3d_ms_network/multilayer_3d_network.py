@@ -5,6 +5,7 @@ import copy
 from logging import getLogger
 import networkx as nx
 import plotly.graph_objs as go
+import statistics
 import sys
 from . import multilayer_3d_mesh_functsions as m3d_mesh
 from . import multilayer_3d_rescale_functions as m3d_rescale
@@ -61,7 +62,6 @@ def create_data_for_3d_visualization(dic_processed_data, conf):
     fo_log_layt = open("log_create_traces_for_network_layt.txt", "w")
     ####################################
     #  make identical mass feature in samples as "pillar"
-    import statistics
 
     f_do_pillar_clustering = 1
 

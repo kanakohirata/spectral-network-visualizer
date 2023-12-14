@@ -66,7 +66,7 @@ def get_initialized_dic_node_info():
         {
             'total_input_idx': 'none',
             'total_input_idx_mod': 'none',
-            'dic_spec_cluster': {},
+            'spec_cluster': {},
             'layer': '',
             'color': 0,
             'suspect': '',
@@ -78,7 +78,7 @@ def get_initialized_dic_node_info():
     dic_node_info = {
         'total_input_idx': 'none',
         'total_input_idx_mod': 'none',
-        'dic_spec_cluster': {},
+        'spec_cluster': {},
         'layer': '',
         'color': 0,
         'suspect': '',

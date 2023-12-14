@@ -272,8 +272,9 @@ def _parse_string_classification_list(string_classification_list):
     if pd.isna(string_classification_list):
         return []
 
-    string_classification_list = string_classification_list.strip('[').strip(']')
-    classifications = string_classification_list.split(',')
-    classifications = [c.strip().strip('"').strip("'") for c in classifications if c.strip().strip('"').strip("'")]
+    if '"' in string_classification_list:
+        classifications = re.findall(r'"(.*?)"', string_classification_list)
+    else:
+        classifications = re.findall(r"'(.*?)'", string_classification_list)
     return classifications
 
